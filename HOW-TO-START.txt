@@ -1,0 +1,169 @@
+================================================================================
+        AI STUDENT COMPANION - HOW TO START YOUR CHATBOT
+================================================================================
+
+🚀 QUICK START (EASIEST METHOD):
+================================================================================
+
+1. DOUBLE-CLICK THIS FILE:
+   → KEEP-RUNNING.bat
+
+2. Wait 10 seconds for services to start
+
+3. Your chatbot will open automatically in your browser!
+
+4. Look for GREEN status indicators at the top showing:
+   ✅ AI Engine: Online
+   ✅ Backend: Online
+
+
+📝 MANUAL START (If batch file doesn't work):
+================================================================================
+
+Step 1: Start AI Engine
+------------------------
+• Open Command Prompt (cmd)
+• Type: cd C:\Users\ELDRED\Desktop\AI-Student-Companion\ai-engine
+• Press Enter
+• Type: node index.js
+• Press Enter
+• You should see: "🤖 AI Engine running on port 3001"
+• KEEP THIS WINDOW OPEN!
+
+Step 2: Start Backend Server
+-----------------------------
+• Open ANOTHER Command Prompt (cmd)
+• Type: cd C:\Users\ELDRED\Desktop\AI-Student-Companion\backend
+• Press Enter
+• Type: set PORT=5001
+• Press Enter
+• Type: node demoServer.js
+• Press Enter
+• You should see: "🚀 AI Student Companion Demo Server Started!"
+• KEEP THIS WINDOW OPEN TOO!
+
+Step 3: Open Chatbot
+---------------------
+• Open your browser
+• Navigate to: C:\Users\ELDRED\Desktop\AI-Student-Companion\CHATBOT-SIMPLE.html
+• Or double-click: CHATBOT-SIMPLE.html
+
+
+🎯 HOW TO USE THE CHATBOT:
+================================================================================
+
+FEATURES YOU CAN USE:
+
+1. 🌙/☀️ LIGHT/DARK MODE
+   → Click the moon/sun icon in top right corner
+   → Theme switches instantly and saves your preference
+
+2. 💬/🎓 DIRECT CHAT vs FULL APP MODE
+   → Click the chat/graduation cap icon to toggle
+   → Direct Chat: No login needed, quick questions
+   → Full App: Register/login for full features and history
+
+3. 🔐 REGISTER & LOGIN
+   → Fill in username, email, password
+   → Click "Register" to create account
+   → Click "Login" to sign in
+   → Password will be saved by Chrome for next time!
+
+4. ✨ QUICK QUESTIONS
+   → Click any quick question button in sidebar
+   → Instant responses about Math, Science, History, etc.
+
+5. 💬 CHAT WITH AI
+   → Type your question in the input box
+   → Press Enter or click ➤ button
+   → Get intelligent responses about your studies!
+
+
+✅ HOW TO KNOW IT'S WORKING:
+================================================================================
+
+YOU SHOULD SEE:
+• Green dots next to "AI Engine: Online ✅"
+• Green dots next to "Backend: Online ✅"
+• Input box is active (not grayed out)
+• You can type messages
+• AI responds to your questions
+
+IF YOU SEE RED DOTS:
+• Services are not running
+• Go back and start them using the steps above
+• Wait 5-10 seconds and refresh the page
+
+
+⚠️ TROUBLESHOOTING:
+================================================================================
+
+Problem: "Backend keeps going offline"
+Solution:
+- Make sure you keep the Command Prompt windows open
+- Don't close them until you're done using the chatbot
+- Run KEEP-RUNNING.bat for automatic restart
+
+Problem: "Password not saving in Chrome"
+Solution:
+- Make sure you click "Login" button (not just press Enter)
+- Chrome will prompt "Save password?" - click "Save"
+- Next time, Chrome will auto-fill your credentials
+
+Problem: "AI not responding"
+Solution:
+- Check that BOTH services show green status
+- Refresh the browser page
+- Try toggling to Direct Chat mode (💬 icon)
+
+Problem: "Port already in use"
+Solution:
+- Open Task Manager (Ctrl+Shift+Esc)
+- Find "Node.js" processes
+- End all Node.js tasks
+- Restart the services
+
+
+🛑 HOW TO STOP THE CHATBOT:
+================================================================================
+
+1. Close your browser tab
+2. Go to the Command Prompt windows
+3. Press Ctrl+C in each window
+4. Type 'Y' if asked to terminate
+5. Close the windows
+
+
+📚 WHAT YOU CAN ASK THE AI:
+================================================================================
+
+Math: "Help me solve quadratic equations"
+Science: "Explain photosynthesis"
+History: "Tell me about World War II"
+Study Tips: "How can I improve my study habits?"
+General: "What is calculus used for?"
+
+And much more! The AI is trained to help with all academic subjects.
+
+
+💡 TIPS FOR BEST EXPERIENCE:
+================================================================================
+
+✓ Keep service windows open while using chatbot
+✓ Use Direct Chat mode for quick questions without login
+✓ Register for full features and chat history
+✓ Try dark mode for late night studying
+✓ Use quick action buttons for common topics
+✓ Services should start in about 5-10 seconds
+
+
+🎓 ENJOY YOUR AI STUDY COMPANION!
+================================================================================
+
+For any issues, make sure:
+1. Node.js is installed on your computer
+2. Both services are running (green status)
+3. You're using a modern browser (Chrome, Firefox, Edge)
+4. Pop-ups are not blocked
+
+Happy studying! 📖✨

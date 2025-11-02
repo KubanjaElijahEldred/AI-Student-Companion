@@ -1,0 +1,199 @@
+================================================================================
+                    EMERGENCY MANUAL START INSTRUCTIONS
+                         AI STUDENT COMPANION
+================================================================================
+
+YOUR BACKEND KEEPS FAILING TO START AUTOMATICALLY.
+USE THESE MANUAL STEPS TO START IT:
+
+================================================================================
+                         STEP-BY-STEP GUIDE
+================================================================================
+
+STEP 1: START AI ENGINE
+------------------------
+1. Press Windows Key + R
+2. Type: cmd
+3. Press Enter (a black window opens)
+4. Copy and paste this EXACT command:
+
+   cd C:\Users\ELDRED\Desktop\AI-Student-Companion\ai-engine
+
+5. Press Enter
+6. Then copy and paste this:
+
+   node index.js
+
+7. Press Enter
+
+YOU SHOULD SEE:
+   "🤖 AI Engine running on port 3001"
+
+KEEP THIS WINDOW OPEN! Minimize it, don't close it.
+
+
+STEP 2: START BACKEND SERVER
+-----------------------------
+1. Press Windows Key + R again
+2. Type: cmd
+3. Press Enter (opens ANOTHER black window)
+4. Copy and paste this EXACT command:
+
+   cd C:\Users\ELDRED\Desktop\AI-Student-Companion\backend
+
+5. Press Enter
+6. Then copy and paste this:
+
+   set PORT=5001
+
+7. Press Enter
+8. Then copy and paste this:
+
+   node simpleServer.js
+
+9. Press Enter
+
+YOU SHOULD SEE:
+   "🚀 BACKEND SERVER STARTED"
+   "Port: 5001"
+   "Status: RUNNING ✅"
+
+KEEP THIS WINDOW OPEN TOO! Minimize it, don't close it.
+
+
+STEP 3: OPEN YOUR CHATBOT
+--------------------------
+1. Go to your Desktop folder
+2. Navigate to: AI-Student-Companion
+3. Double-click: CHATBOT-SIMPLE.html
+4. It opens in your browser
+
+YOU SHOULD NOW SEE:
+   ✅ AI Engine: Online (GREEN dot)
+   ✅ Backend: Online (GREEN dot)
+
+
+STEP 4: TEST IT WORKS
+----------------------
+In the chatbot:
+1. Fill in: Username, Email, Password
+2. Click "Register"
+3. You should see: "Registration successful!"
+4. Fill in: Email and Password again
+5. Click "Login"
+6. You should see: "Welcome [your username]!"
+7. Type a message: "Hello, can you help me with math?"
+8. Press Enter
+9. You should get an AI response!
+
+
+================================================================================
+                         TROUBLESHOOTING
+================================================================================
+
+PROBLEM: "node is not recognized"
+SOLUTION: Node.js is not installed. Install it from nodejs.org
+
+PROBLEM: "Cannot find module"
+SOLUTION:
+   1. Open command prompt in backend folder
+   2. Run: npm install
+   3. Wait for it to finish
+   4. Try starting backend again
+
+PROBLEM: "Port 3001 already in use"
+SOLUTION:
+   1. Open Task Manager (Ctrl+Shift+Esc)
+   2. Find all "Node.js" processes
+   3. Right-click each → End Task
+   4. Try starting again
+
+PROBLEM: "Port 5001 already in use"
+SOLUTION: Same as above - kill all node processes first
+
+PROBLEM: Backend window closes immediately
+SOLUTION:
+   1. Check if simpleServer.js exists in backend folder
+   2. If not, use demoServer.js instead:
+      node demoServer.js
+
+PROBLEM: Still getting errors
+SOLUTION:
+   1. Make sure you're in the correct folder (check the path)
+   2. Try running: npm install in both ai-engine and backend folders
+   3. Restart your computer and try again
+
+
+================================================================================
+                    WHAT EACH SERVICE DOES
+================================================================================
+
+AI ENGINE (Port 3001):
+   - Generates intelligent responses
+   - Answers questions about math, science, history, etc.
+   - Must be running to get AI replies
+
+BACKEND SERVER (Port 5001):
+   - Handles user registration and login
+   - Stores your chat messages
+   - Connects you to the AI Engine
+   - Must be running to register/login
+
+
+================================================================================
+                         QUICK REFERENCE
+================================================================================
+
+TO CHECK IF SERVICES ARE RUNNING:
+   Open browser and go to:
+   - http://localhost:3001/health (AI Engine)
+   - http://localhost:5001/api/health (Backend)
+
+   If they work, you'll see JSON response.
+   If they don't work, you'll see "Can't connect" error.
+
+TO STOP SERVICES:
+   1. Go to each command prompt window
+   2. Press Ctrl+C
+   3. Type Y if asked
+   4. Close the windows
+
+TO RESTART:
+   1. Close both command prompt windows
+   2. Follow STEP 1 and STEP 2 again
+
+
+================================================================================
+                      COPY-PASTE COMMANDS
+================================================================================
+
+FOR AI ENGINE:
+   cd C:\Users\ELDRED\Desktop\AI-Student-Companion\ai-engine
+   node index.js
+
+FOR BACKEND:
+   cd C:\Users\ELDRED\Desktop\AI-Student-Companion\backend
+   set PORT=5001
+   node simpleServer.js
+
+
+REMEMBER: Keep BOTH command prompt windows open while using the chatbot!
+
+
+================================================================================
+                    IF NOTHING WORKS - LAST RESORT
+================================================================================
+
+1. Restart your computer
+2. Make sure no antivirus is blocking Node.js
+3. Open Command Prompt as Administrator (right-click → Run as administrator)
+4. Navigate to backend folder
+5. Run: npm install express cors jsonwebtoken bcryptjs axios
+6. Try starting services again with commands above
+
+
+For more help, keep both command prompt windows open and read any error
+messages carefully. Google the error message for solutions.
+
+Good luck! Your chatbot WILL work once both services are running! 🚀
+================================================================================

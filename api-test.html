@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Student Companion - API Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .api-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .api-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .api-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .api-header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .api-content {
+            padding: 30px;
+        }
+
+        .api-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .api-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid transparent;
+            transition: border-color 0.3s ease;
+        }
+
+        .api-section:hover {
+            border-color: #4f46e5;
+        }
+
+        .api-section h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .endpoint-group {
+            margin-bottom: 25px;
+        }
+
+        .endpoint-group h3 {
+            color: #4f46e5;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .endpoint {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .endpoint-header {
+            background: #f7fafc;
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .method {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 12px;
+            color: white;
+        }
+
+        .method.GET { background: #28a745; }
+        .method.POST { background: #007bff; }
+        .method.PUT { background: #ffc107; color: #212529; }
+        .method.DELETE { background: #dc3545; }
+
+        .endpoint-url {
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .endpoint-body {
+            padding: 15px;
+        }
+
+        .test-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .form-group input, .form-group textarea {
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .test-button {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .test-button:hover {
+            background: #3730a3;
+        }
+
+        .test-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .response-area {
+            margin-top: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .response-header {
+            background: #f7fafc;
+            padding: 10px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .response-body {
+            padding: 15px;
+            background: #1a202c;
+            color: #e2e8f0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .response-body.empty {
+            color: #9ca3af;
+            font-style: italic;
+            background: #f8f9fa;
+        }
+
+        .status-indicators {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+
+        .status-online {
+            background: #28a745;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .quick-tests {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .quick-tests h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .quick-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .quick-button {
+            background: white;
+            color: #4f46e5;
+            border: 2px solid #4f46e5;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .quick-button:hover {
+            background: #4f46e5;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .api-sections {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="api-container">
+        <div class="api-header">
+            <h1>🔧 API Testing Interface</h1>
+            <p>Test all AI Student Companion APIs directly in your browser</p>
+        </div>
+
+        <div class="api-content">
+            <div class="status-indicators">
+                <div class="status-indicator">
+                    <span class="status-dot" id="aiEngineStatus"></span>
+                    <span>AI Engine (Port 3001)</span>
+                </div>
+                <div class="status-indicator">
+                    <span class="status-dot" id="backendStatus"></span>
+                    <span>Backend Server (Port 5001)</span>
+                </div>
+            </div>
+
+            <div class="quick-tests">
+                <h2>⚡ Quick Tests</h2>
+                <div class="quick-buttons">
+                    <button class="quick-button" onclick="quickTestAI()">Test AI Response</button>
+                    <button class="quick-button" onclick="quickTestHealth()">Health Check</button>
+                    <button class="quick-button" onclick="quickTestAuth()">Test Registration</button>
+                    <button class="quick-button" onclick="clearAllResponses()">Clear All</button>
+                </div>
+            </div>
+
+            <div class="api-sections">
+                <!-- AI Engine APIs -->
+                <div class="api-section">
+                    <h2>🤖 AI Engine APIs</h2>
+
+                    <div class="endpoint-group">
+                        <h3>Core Functions</h3>
+
+                        <div class="endpoint">
+                            <div class="endpoint-header">
+                                <div>
+                                    <span class="method POST">POST</span>
+                                    <span class="endpoint-url">/api/respond</span>
+                                </div>
+                            </div>
+                            <div class="endpoint-body">
+                                <form class="test-form" onsubmit="testAIRespond(event)">
+                                    <div class="form-group">
+                                        <label>Message:</label>
+                                        <input type="text" name="message" placeholder="Hello, can you help me with math?" required>
+                                    </div>
+                                    <button type="submit" class="test-button">Send Message</button>
+                                </form>
+                                <div class="response-area" style="display: none;">
+                                    <div class="response-header">Response:</div>
+                                    <div class="response-body" id="aiRespondResponse"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="endpoint">
+                            <div class="endpoint-header">
+                                <div>
+                                    <span class="method GET">GET</span>
+                                    <span class="endpoint-url">/health</span>
+                                </div>
+                            </div>
+                            <div class="endpoint-body">
+                                <button class="test-button" onclick="testAIHealth()">Check Health</button>
+                                <div class="response-area" style="display: none;">
+                                    <div class="response-header">Response:</div>
+                                    <div class="response-body" id="aiHealthResponse"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backend APIs -->
+                <div class="api-section">
+                    <h2>⚙️ Backend APIs</h2>
+
+                    <div class="endpoint-group">
+                        <h3>Authentication</h3>
+
+                        <div class="endpoint">
+                            <div class="endpoint-header">
+                                <div>
+                                    <span class="method POST">POST</span>
+                                    <span class="endpoint-url">/api/auth/register</span>
+                                </div>
+                            </div>
+                            <div class="endpoint-body">
+                                <form class="test-form" onsubmit="testRegister(event)">
+                                    <div class="form-group">
+                                        <label>Username:</label>
+                                        <input type="text" name="username" placeholder="testuser" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Email:</label>
+                                        <input type="email" name="email" placeholder="test@example.com" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Password:</label>
+                                        <input type="password" name="password" placeholder="password123" required>
+                                    </div>
+                                    <button type="submit" class="test-button">Register User</button>
+                                </form>
+                                <div class="response-area" style="display: none;">
+                                    <div class="response-header">Response:</div>
+                                    <div class="response-body" id="registerResponse"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="endpoint">
+                            <div class="endpoint-header">
+                                <div>
+                                    <span class="method POST">POST</span>
+                                    <span class="endpoint-url">/api/auth/login</span>
+                                </div>
+                            </div>
+                            <div class="endpoint-body">
+                                <form class="test-form" onsubmit="testLogin(event)">
+                                    <div class="form-group">
+                                        <label>Email:</label>
+                                        <input type="email" name="email" placeholder="test@example.com" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Password:</label>
+                                        <input type="password" name="password" placeholder="password123" required>
+                                    </div>
+                                    <button type="submit" class="test-button">Login</button>
+                                </form>
+                                <div class="response-area" style="display: none;">
+                                    <div class="response-header">Response:</div>
+                                    <div class="response-body" id="loginResponse"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="endpoint-group">
+                        <h3>Chat Functions</h3>
+
+                        <div class="endpoint">
+                            <div class="endpoint-header">
+                                <div>
+                                    <span class="method POST">POST</span>
+                                    <span class="endpoint-url">/api/chat</span>
+                                </div>
+                            </div>
+                            <div class="endpoint-body">
+                                <form class="test-form" onsubmit="testChat(event)">
+                                    <div class="form-group">
+                                        <label>Auth Token:</label>
+                                        <input type="text" name="token" placeholder="Login first to get token" id="authTokenInput">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Message:</label>
+                                        <input type="text" name="content" placeholder="Help me with calculus" required>
+                                    </div>
+                                    <button type="submit" class="test-button">Send Chat Message</button>
+                                </form>
+                                <div class="response-area" style="display: none;">
+                                    <div class="response-header">Response:</div>
+                                    <div class="response-body" id="chatResponse"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="endpoint">
+                            <div class="endpoint-header">
+                                <div>
+                                    <span class="method GET">GET</span>
+                                    <span class="endpoint-url">/api/health</span>
+                                </div>
+                            </div>
+                            <div class="endpoint-body">
+                                <button class="test-button" onclick="testBackendHealth()">Check Backend Health</button>
+                                <div class="response-area" style="display: none;">
+                                    <div class="response-header">Response:</div>
+                                    <div class="response-body" id="backendHealthResponse"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const AI_ENGINE_URL = 'http://localhost:3001';
+        const BACKEND_URL = 'http://localhost:5001';
+
+        let currentToken = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkServices();
+            setInterval(checkServices, 10000);
+        });
+
+        async function checkServices() {
+            await checkAIEngine();
+            await checkBackend();
+        }
+
+        async function checkAIEngine() {
+            const statusDot = document.getElementById('aiEngineStatus');
+            try {
+                const response = await fetch(`${AI_ENGINE_URL}/health`, { timeout: 3000 });
+                if (response.ok) {
+                    statusDot.classList.add('status-online');
+                } else {
+                    throw new Error('Health check failed');
+                }
+            } catch (error) {
+                statusDot.classList.remove('status-online');
+            }
+        }
+
+        async function checkBackend() {
+            const statusDot = document.getElementById('backendStatus');
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/health`, { timeout: 3000 });
+                if (response.ok) {
+                    statusDot.classList.add('status-online');
+                } else {
+                    throw new Error('Health check failed');
+                }
+            } catch (error) {
+                statusDot.classList.remove('status-online');
+            }
+        }
+
+        // API Test Functions
+        async function testAIRespond(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const message = formData.get('message');
+
+            try {
+                const response = await fetch(`${AI_ENGINE_URL}/api/respond`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+                showResponse('aiRespondResponse', response.status, data);
+            } catch (error) {
+                showResponse('aiRespondResponse', 'ERROR', { error: error.message });
+            }
+        }
+
+        async function testAIHealth() {
+            try {
+                const response = await fetch(`${AI_ENGINE_URL}/health`);
+                const data = await response.json();
+                showResponse('aiHealthResponse', response.status, data);
+            } catch (error) {
+                showResponse('aiHealthResponse', 'ERROR', { error: error.message });
+            }
+        }
+
+        async function testRegister(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const userData = {
+                username: formData.get('username'),
+                email: formData.get('email'),
+                password: formData.get('password')
+            };
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+                showResponse('registerResponse', response.status, data);
+            } catch (error) {
+                showResponse('registerResponse', 'ERROR', { error: error.message });
+            }
+        }
+
+        async function testLogin(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const loginData = {
+                email: formData.get('email'),
+                password: formData.get('password')
+            };
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(loginData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    currentToken = data.token;
+                    document.getElementById('authTokenInput').value = data.token;
+                }
+
+                showResponse('loginResponse', response.status, data);
+            } catch (error) {
+                showResponse('loginResponse', 'ERROR', { error: error.message });
+            }
+        }
+
+        async function testChat(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const token = formData.get('token');
+            const content = formData.get('content');
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token
+                    },
+                    body: JSON.stringify({ content })
+                });
+
+                const data = await response.json();
+                showResponse('chatResponse', response.status, data);
+            } catch (error) {
+                showResponse('chatResponse', 'ERROR', { error: error.message });
+            }
+        }
+
+        async function testBackendHealth() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/health`);
+                const data = await response.json();
+                showResponse('backendHealthResponse', response.status, data);
+            } catch (error) {
+                showResponse('backendHealthResponse', 'ERROR', { error: error.message });
+            }
+        }
+
+        // Quick test functions
+        async function quickTestAI() {
+            try {
+                const response = await fetch(`${AI_ENGINE_URL}/api/respond`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: 'Hello, can you help me with a quick test?' })
+                });
+
+                const data = await response.json();
+                alert(`AI Response: "${data.reply}"`);
+            } catch (error) {
+                alert(`AI Test Failed: ${error.message}`);
+            }
+        }
+
+        async function quickTestHealth() {
+            const results = [];
+
+            try {
+                const aiResponse = await fetch(`${AI_ENGINE_URL}/health`);
+                results.push(`AI Engine: ${aiResponse.ok ? '✅ Online' : '❌ Offline'}`);
+            } catch {
+                results.push('AI Engine: ❌ Offline');
+            }
+
+            try {
+                const backendResponse = await fetch(`${BACKEND_URL}/api/health`);
+                results.push(`Backend: ${backendResponse.ok ? '✅ Online' : '❌ Offline'}`);
+            } catch {
+                results.push('Backend: ❌ Offline');
+            }
+
+            alert(`Health Check Results:\n${results.join('\n')}`);
+        }
+
+        async function quickTestAuth() {
+            const testUser = {
+                username: 'testuser_' + Date.now(),
+                email: 'test_' + Date.now() + '@example.com',
+                password: 'testpass123'
+            };
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testUser)
+                });
+
+                const data = await response.json();
+                alert(response.ok ? '✅ Registration test successful!' : `❌ Registration failed: ${data.error}`);
+            } catch (error) {
+                alert(`❌ Registration test failed: ${error.message}`);
+            }
+        }
+
+        function clearAllResponses() {
+            const responseElements = document.querySelectorAll('.response-area');
+            responseElements.forEach(el => {
+                el.style.display = 'none';
+                const body = el.querySelector('.response-body');
+                if (body) body.textContent = '';
+            });
+        }
+
+        function showResponse(elementId, status, data) {
+            const element = document.getElementById(elementId);
+            const responseArea = element.parentElement;
+
+            responseArea.style.display = 'block';
+
+            const formattedResponse = JSON.stringify({
+                status: status,
+                timestamp: new Date().toISOString(),
+                data: data
+            }, null, 2);
+
+            element.textContent = formattedResponse;
+            element.className = 'response-body';
+        }
+    </script>
+</body>
+</html>

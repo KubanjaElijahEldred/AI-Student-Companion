@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Student Companion - Quick Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 800px;
+            height: 80vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .chat-header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .status-bar {
+            background: #f8f9fa;
+            padding: 10px 20px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background-color: #28a745;
+        }
+
+        .status-offline {
+            background-color: #dc3545;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background: #4f46e5;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .ai-message {
+            background: #f3f4f6;
+            color: #374151;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            color: #dc2626;
+            align-self: flex-start;
+            border: 1px solid #fecaca;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+
+        .chat-input-form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 25px;
+            outline: none;
+            font-size: 16px;
+        }
+
+        .chat-input:focus {
+            border-color: #4f46e5;
+        }
+
+        .send-button {
+            padding: 12px 20px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+
+        .send-button:hover {
+            background: #3730a3;
+        }
+
+        .send-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 12px 16px;
+            background: #f3f4f6;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+            max-width: 80px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #9ca3af;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .quick-button {
+            padding: 6px 12px;
+            background: #e5e7eb;
+            color: #374151;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+
+        .quick-button:hover {
+            background: #d1d5db;
+        }
+
+        .test-controls {
+            background: #fff3cd;
+            padding: 15px;
+            border-bottom: 1px solid #ffeaa7;
+            font-size: 14px;
+        }
+
+        .test-button {
+            background: #fd7e14;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 12px;
+        }
+
+        .test-button:hover {
+            background: #e85a00;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🤖 AI Student Companion</h1>
+            <p>Direct AI Engine Test - No Database Required</p>
+        </div>
+
+        <div class="test-controls">
+            🧪 Test Mode: Direct connection to AI Engine
+            <button class="test-button" onclick="testConnection()">Test Connection</button>
+            <button class="test-button" onclick="clearChat()">Clear Chat</button>
+        </div>
+
+        <div class="status-bar">
+            <span class="status-indicator" id="statusIndicator"></span>
+            <span id="statusText">Checking connection...</span>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="ai-message">
+                👋 Hello! I'm your AI study companion. I can help you with:
+                <br>• Mathematics (algebra, calculus, geometry)
+                <br>• Science (physics, chemistry, biology)
+                <br>• History and social studies
+                <br>• General academic questions
+                <br><br>Ask me anything to get started!
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <div class="quick-actions">
+                <button class="quick-button" onclick="askQuestion('Hello, can you help me with math?')">Math Help</button>
+                <button class="quick-button" onclick="askQuestion('Tell me about photosynthesis')">Science Question</button>
+                <button class="quick-button" onclick="askQuestion('What happened in World War II?')">History Question</button>
+                <button class="quick-button" onclick="askQuestion('How can I improve my study habits?')">Study Tips</button>
+            </div>
+
+            <form class="chat-input-form" onsubmit="sendMessage(event)">
+                <input
+                    type="text"
+                    class="chat-input"
+                    id="messageInput"
+                    placeholder="Ask me about your studies..."
+                    autocomplete="off"
+                />
+                <button type="submit" class="send-button" id="sendButton">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const AI_ENGINE_URL = 'http://localhost:3001';
+        let isConnected = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkConnection();
+            document.getElementById('messageInput').focus();
+        });
+
+        // Check AI Engine connection
+        async function checkConnection() {
+            const statusIndicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+
+            try {
+                const response = await fetch(`${AI_ENGINE_URL}/health`, {
+                    method: 'GET',
+                    timeout: 5000
+                });
+
+                if (response.ok) {
+                    isConnected = true;
+                    statusIndicator.className = 'status-indicator status-online';
+                    statusText.textContent = 'AI Engine connected ✅';
+                } else {
+                    throw new Error('Health check failed');
+                }
+            } catch (error) {
+                isConnected = false;
+                statusIndicator.className = 'status-indicator status-offline';
+                statusText.textContent = 'AI Engine disconnected ❌ - Please start the AI Engine';
+
+                addMessage('error', '⚠️ Cannot connect to AI Engine. Please make sure it\'s running on port 3001.');
+            }
+        }
+
+        // Test connection button
+        async function testConnection() {
+            addMessage('user', 'Testing connection...');
+            await checkConnection();
+
+            if (isConnected) {
+                try {
+                    const response = await fetch(`${AI_ENGINE_URL}/api/respond`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: 'Hello, are you working?' })
+                    });
+
+                    const data = await response.json();
+                    addMessage('ai', '🧪 Test Response: ' + data.reply);
+                } catch (error) {
+                    addMessage('error', '❌ Test failed: ' + error.message);
+                }
+            }
+        }
+
+        // Send message function
+        async function sendMessage(event) {
+            event.preventDefault();
+
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+
+            if (!message) return;
+
+            if (!isConnected) {
+                addMessage('error', '❌ Please wait for connection or check if AI Engine is running.');
+                return;
+            }
+
+            // Add user message
+            addMessage('user', message);
+            messageInput.value = '';
+
+            // Show typing indicator
+            showTypingIndicator();
+
+            try {
+                const response = await fetch(`${AI_ENGINE_URL}/api/respond`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+
+                hideTypingIndicator();
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addMessage('ai', data.reply);
+                } else {
+                    const errorData = await response.json();
+                    addMessage('error', '❌ Error: ' + (errorData.error || 'Unknown error'));
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                console.error('Chat error:', error);
+
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    addMessage('error', '❌ Cannot reach AI Engine. Please check if it\'s running on port 3001.');
+                    isConnected = false;
+                    checkConnection();
+                } else {
+                    addMessage('error', '❌ Connection error: ' + error.message);
+                }
+            }
+        }
+
+        // Quick question function
+        function askQuestion(question) {
+            document.getElementById('messageInput').value = question;
+            document.getElementById('messageInput').focus();
+        }
+
+        // Add message to chat
+        function addMessage(sender, text) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+
+            let className = 'message ';
+            switch(sender) {
+                case 'user':
+                    className += 'user-message';
+                    break;
+                case 'ai':
+                    className += 'ai-message';
+                    break;
+                case 'error':
+                    className += 'error-message';
+                    break;
+            }
+
+            messageDiv.className = className;
+            messageDiv.textContent = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Show typing indicator
+        function showTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            const chatMessages = document.getElementById('chatMessages');
+            typingIndicator.style.display = 'flex';
+            chatMessages.appendChild(typingIndicator);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            typingIndicator.style.display = 'none';
+        }
+
+        // Clear chat
+        function clearChat() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = `
+                <div class="ai-message">
+                    👋 Hello! I'm your AI study companion. I can help you with:
+                    <br>• Mathematics (algebra, calculus, geometry)
+                    <br>• Science (physics, chemistry, biology)
+                    <br>• History and social studies
+                    <br>• General academic questions
+                    <br><br>Ask me anything to get started!
+                </div>
+            `;
+        }
+
+        // Enter key support
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage(e);
+            }
+        });
+
+        // Auto-reconnect every 10 seconds if disconnected
+        setInterval(function() {
+            if (!isConnected) {
+                checkConnection();
+            }
+        }, 10000);
+    </script>
+</body>
+</html>

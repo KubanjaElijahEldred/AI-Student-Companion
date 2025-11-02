@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Student Companion - Simple Working Chatbot</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+            --background: #ffffff;
+            --surface: #f8fafc;
+            --surface-glass: rgba(255, 255, 255, 0.8);
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --error: #ef4444;
+            --shadow: rgba(99, 102, 241, 0.1);
+            --shadow-lg: rgba(99, 102, 241, 0.3);
+        }
+
+        [data-theme="dark"] {
+            --primary: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --secondary: #6366f1;
+            --accent: #f472b6;
+            --background: #0a0a1a;
+            --surface: #1a1a2e;
+            --surface-glass: rgba(26, 26, 46, 0.8);
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --border: #2d2d4a;
+            --success: #34d399;
+            --error: #f87171;
+            --shadow: rgba(139, 92, 246, 0.2);
+            --shadow-lg: rgba(139, 92, 246, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: backgroundMove 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes backgroundMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            height: 92vh;
+            background: var(--surface-glass);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px var(--shadow-lg), 0 0 0 1px var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .container:hover {
+            box-shadow: 0 30px 60px var(--shadow-lg), 0 0 0 1px var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
+            background-size: 200% 100%;
+            animation: headerGradient 8s ease infinite;
+            color: white;
+            padding: 24px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes headerGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes shine {
+            0% { left: -100%; }
+            100% { left: 200%; }
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            letter-spacing: -0.5px;
+        }
+
+        .header h1 span {
+            display: inline-block;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-icon {
+            width: 44px;
+            height: 44px;
+            border: none;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .btn-icon::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3), transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .btn-icon:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-icon:hover::before {
+            opacity: 1;
+        }
+
+        .btn-icon:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        .status-bar {
+            background: var(--surface);
+            padding: 16px 24px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .status-bar::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            height: 2px;
+            width: 30%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+            animation: statusLine 3s ease-in-out infinite;
+        }
+
+        @keyframes statusLine {
+            0% { left: 0%; width: 30%; }
+            50% { left: 70%; width: 30%; }
+            100% { left: 0%; width: 30%; }
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .status-item:hover {
+            background: var(--surface-glass);
+            transform: translateY(-1px);
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--error);
+            animation: pulse 2s infinite;
+            position: relative;
+            box-shadow: 0 0 10px var(--error);
+        }
+
+        .status-dot::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px solid var(--error);
+            opacity: 0;
+            animation: ripple 2s infinite;
+        }
+
+        .status-dot.online {
+            background: var(--success);
+            box-shadow: 0 0 15px var(--success);
+        }
+
+        .status-dot.online::after {
+            border-color: var(--success);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        .main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: var(--surface-glass);
+            backdrop-filter: blur(20px);
+            border-right: 2px solid var(--border);
+            padding: 24px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--primary), var(--secondary), var(--accent));
+            opacity: 0.5;
+        }
+
+        .auth-box {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px var(--shadow);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .auth-box:hover {
+            border-color: var(--primary);
+            box-shadow: 0 8px 24px var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .auth-box:hover::before {
+            left: 100%;
+        }
+
+        .auth-box h3 {
+            color: var(--text-primary);
+            margin-bottom: 18px;
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            background: var(--background);
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .input-group input:hover {
+            border-color: var(--secondary);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--shadow-lg);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text-primary);
+            border: 2px solid var(--primary);
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px var(--shadow-lg);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--error), #dc2626);
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626, var(--error));
+            transform: translateY(-2px);
+        }
+
+        .auth-status {
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .auth-status.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .auth-status.info {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+        }
+
+        .quick-btns {
+            margin-top: 20px;
+        }
+
+        .quick-btns h3 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .quick-btn {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            margin-bottom: 10px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quick-btn::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
+            transform: scaleY(0);
+            transition: transform 0.4s;
+        }
+
+        .quick-btn:hover {
+            background: linear-gradient(90deg, var(--surface), var(--background));
+            border-color: var(--primary);
+            transform: translateX(8px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .quick-btn:hover::before {
+            transform: scaleY(1);
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 14px 18px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.6;
+            animation: slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+            background-size: 200% 100%;
+            animation: messageGradient 3s ease infinite, slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 12px var(--shadow-lg);
+            font-weight: 500;
+        }
+
+        @keyframes messageGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .message.ai {
+            background: var(--surface-glass);
+            backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            border: 2px solid var(--border);
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .message.ai:hover {
+            border-color: var(--primary);
+            transform: translateX(2px);
+        }
+
+        .message.system {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+            color: var(--primary);
+            align-self: center;
+            text-align: center;
+            font-style: italic;
+            font-size: 13px;
+            border: 2px dashed var(--primary);
+            backdrop-filter: blur(5px);
+        }
+
+        .message.error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.15));
+            color: var(--error);
+            align-self: flex-start;
+            border: 2px solid var(--error);
+            backdrop-filter: blur(5px);
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .typing {
+            display: none;
+            padding: 12px 16px;
+            background: var(--surface);
+            border-radius: 15px;
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+            width: 60px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); }
+        }
+
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .input-box {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-box textarea {
+            flex: 1;
+            padding: 14px 18px;
+            border: 2px solid var(--border);
+            border-radius: 18px;
+            background: var(--background);
+            color: var(--text-primary);
+            font-size: 15px;
+            resize: none;
+            max-height: 100px;
+            min-height: 52px;
+            font-family: inherit;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .input-box textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--shadow), 0 4px 12px var(--shadow-lg);
+            transform: translateY(-1px);
+        }
+
+        .input-box textarea:hover {
+            border-color: var(--secondary);
+        }
+
+        .send-btn {
+            width: 52px;
+            height: 52px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background-size: 200% 200%;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 4px 12px var(--shadow-lg);
+            animation: buttonPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes buttonPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .send-btn::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            opacity: 0;
+            transition: opacity 0.4s;
+            z-index: -1;
+        }
+
+        .send-btn:hover {
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            transform: scale(1.15) rotate(90deg);
+            box-shadow: 0 8px 24px var(--shadow-lg);
+        }
+
+        .send-btn:hover::before {
+            opacity: 1;
+        }
+
+        .send-btn:active {
+            transform: scale(0.95) rotate(90deg);
+        }
+
+        .send-btn:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.5;
+            animation: none;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 700;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            animation: toastBounce 0.5s ease-out;
+        }
+
+        @keyframes toastBounce {
+            0% { transform: translateX(400px); }
+            60% { transform: translateX(-10px); }
+            80% { transform: translateX(5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .toast.success {
+            background: linear-gradient(135deg, var(--success), #059669);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+        }
+        .toast.error {
+            background: linear-gradient(135deg, var(--error), #dc2626);
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4);
+        }
+        .toast.info {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 8px 24px var(--shadow-lg);
+        }
+
+        .hidden { display: none !important; }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--surface);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+            transition: background 0.3s;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--secondary), var(--accent));
+        }
+
+        /* Selection styling */
+        ::selection {
+            background: var(--primary);
+            color: white;
+        }
+
+        ::-moz-selection {
+            background: var(--primary);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><span>🤖</span> AI Student Companion</h1>
+            <div class="controls">
+                <button class="btn-icon" onclick="toggleTheme()" id="themeBtn" title="Toggle Theme">🌙</button>
+                <button class="btn-icon" onclick="toggleDirectMode()" id="modeBtn" title="Toggle Mode">💬</button>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-dot" id="aiStatus"></span>
+                <span id="aiText">AI Engine: Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-dot" id="backendStatus"></span>
+                <span id="backendText">Backend: Checking...</span>
+            </div>
+            <div class="status-item">
+                <strong id="modeText">Full App Mode</strong>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="sidebar" id="sidebar">
+                <div class="auth-box">
+                    <h3>🔐 Authentication</h3>
+                    <div id="authForm">
+                        <div class="input-group">
+                            <label>Username</label>
+                            <input type="text" id="username" name="username" placeholder="Enter username" autocomplete="username">
+                        </div>
+                        <div class="input-group">
+                            <label>Email</label>
+                            <input type="email" id="email" name="email" placeholder="Enter email" autocomplete="email">
+                        </div>
+                        <div class="input-group">
+                            <label>Password</label>
+                            <input type="password" id="password" name="password" placeholder="Enter password" autocomplete="current-password">
+                        </div>
+                        <button class="btn btn-primary" onclick="register()" type="button" id="regBtn">📝 Register</button>
+                        <button class="btn btn-secondary" onclick="login()" type="submit" id="loginBtn">🔑 Login</button>
+                        <button class="btn btn-danger hidden" onclick="logout()" id="logoutBtn">🚪 Logout</button>
+                    </div>
+                    <div class="auth-status info" id="authStatus">Please login to access full features</div>
+                </div>
+
+                <div class="quick-btns">
+                    <h3>✨ Quick Questions</h3>
+                    <button class="quick-btn" onclick="ask('Help me with mathematics')">📊 Math Help</button>
+                    <button class="quick-btn" onclick="ask('Explain photosynthesis')">🌱 Biology</button>
+                    <button class="quick-btn" onclick="ask('Tell me about WWII')">📚 History</button>
+                    <button class="quick-btn" onclick="ask('Study tips please')">💡 Study Tips</button>
+                    <button class="quick-btn" onclick="ask('What is calculus?')">🔢 Calculus</button>
+                    <button class="quick-btn" onclick="clearChat()">🗑️ Clear Chat</button>
+                </div>
+            </div>
+
+            <div class="chat-area">
+                <div class="messages" id="messages">
+                    <div class="message system">
+                        🌟 Welcome to AI Student Companion! I'm here to help you with your studies.
+                    </div>
+                    <div class="message system">
+                        ⚠️ <strong>IMPORTANT:</strong> To get AI responses, start the services:<br>
+                        1. Open Command Prompt → Run: <code>cd C:\Users\ELDRED\Desktop\AI-Student-Companion\ai-engine && node index.js</code><br>
+                        2. Open another Command Prompt → Run: <code>cd C:\Users\ELDRED\Desktop\AI-Student-Companion\backend && set PORT=5001 && node demoServer.js</code><br>
+                        Keep both windows open!
+                    </div>
+                </div>
+
+                <div class="typing" id="typing">
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+
+                <div class="input-area">
+                    <form onsubmit="event.preventDefault(); send();">
+                        <div class="input-box">
+                            <textarea id="input" name="message" placeholder="Ask me anything about your studies..." rows="1"></textarea>
+                            <button class="send-btn" type="submit" id="sendBtn">➤</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Config
+        const AI_URL = 'http://localhost:3001';
+        const BACKEND_URL = 'http://localhost:5001';
+        const FALLBACK_URL = 'http://localhost:5000';
+
+        // State
+        let token = localStorage.getItem('token');
+        let user = JSON.parse(localStorage.getItem('user') || 'null');
+        let theme = localStorage.getItem('theme') || 'light';
+        let directMode = localStorage.getItem('directMode') === 'true';
+        let aiOnline = false;
+        let backendOnline = false;
+        let backendUrl = BACKEND_URL;
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            document.documentElement.setAttribute('data-theme', theme);
+            document.getElementById('themeBtn').textContent = theme === 'light' ? '🌙' : '☀️';
+
+            updateAuth();
+            updateMode();
+            checkServices();
+            setInterval(checkServices, 10000);
+
+            const input = document.getElementById('input');
+            input.addEventListener('input', () => {
+                input.style.height = 'auto';
+                input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    send();
+                }
+            });
+
+            // Add form submit handler for password saving
+            document.getElementById('loginBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                login();
+            });
+
+            if (user) {
+                addMsg('system', `Welcome back, ${user.username}! 👋`);
+            } else if (directMode) {
+                addMsg('system', 'Direct Chat Mode - No login required! 🚀');
+            }
+
+            toast('🚀 Chatbot loaded successfully!', 'success');
+        });
+
+        function toggleTheme() {
+            theme = theme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            document.getElementById('themeBtn').textContent = theme === 'light' ? '🌙' : '☀️';
+            toast(`Switched to ${theme} mode`, 'info');
+        }
+
+        function toggleDirectMode() {
+            directMode = !directMode;
+            localStorage.setItem('directMode', directMode);
+            updateMode();
+            toast(directMode ? 'Direct Chat Mode - No login needed!' : 'Full App Mode - Login for features', 'info');
+        }
+
+        function updateMode() {
+            const sidebar = document.getElementById('sidebar');
+            const modeBtn = document.getElementById('modeBtn');
+            const modeText = document.getElementById('modeText');
+
+            if (directMode) {
+                sidebar.style.display = 'none';
+                modeBtn.textContent = '🎓';
+                modeText.textContent = 'Direct Chat Mode';
+            } else {
+                sidebar.style.display = 'block';
+                modeBtn.textContent = '💬';
+                modeText.textContent = 'Full App Mode';
+            }
+
+            updateInput();
+        }
+
+        async function checkServices() {
+            // Check AI Engine
+            try {
+                const res = await fetch(`${AI_URL}/health`, { signal: AbortSignal.timeout(2000) });
+                aiOnline = res.ok;
+            } catch {
+                aiOnline = false;
+            }
+
+            document.getElementById('aiStatus').classList.toggle('online', aiOnline);
+            document.getElementById('aiText').textContent = `AI Engine: ${aiOnline ? 'Online ✅' : 'Offline ❌'}`;
+
+            // Check Backend
+            try {
+                let res = await fetch(`${BACKEND_URL}/api/health`, { signal: AbortSignal.timeout(2000) });
+                if (res.ok) {
+                    backendOnline = true;
+                    backendUrl = BACKEND_URL;
+                } else {
+                    res = await fetch(`${FALLBACK_URL}/api/health`, { signal: AbortSignal.timeout(2000) });
+                    if (res.ok) {
+                        backendOnline = true;
+                        backendUrl = FALLBACK_URL;
+                    } else {
+                        backendOnline = false;
+                    }
+                }
+            } catch {
+                backendOnline = false;
+            }
+
+            document.getElementById('backendStatus').classList.toggle('online', backendOnline);
+            document.getElementById('backendText').textContent = `Backend: ${backendOnline ? 'Online ✅' : 'Offline ❌'}`;
+
+            updateInput();
+        }
+
+        function updateInput() {
+            const input = document.getElementById('input');
+            const sendBtn = document.getElementById('sendBtn');
+
+            let canChat = false;
+
+            if (directMode) {
+                canChat = aiOnline;
+                input.placeholder = aiOnline
+                    ? "Ask me anything about your studies..."
+                    : "AI Engine offline - Start with: node ai-engine/index.js";
+            } else {
+                canChat = token && backendOnline;
+                if (!token) {
+                    input.placeholder = "Please login to start chatting...";
+                } else if (!backendOnline) {
+                    input.placeholder = "Backend offline - Start with: node backend/demoServer.js";
+                } else {
+                    input.placeholder = "Ask me anything about your studies...";
+                }
+            }
+
+            input.disabled = !canChat;
+            sendBtn.disabled = !canChat;
+        }
+
+        function updateAuth() {
+            const regBtn = document.getElementById('regBtn');
+            const loginBtn = document.getElementById('loginBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const status = document.getElementById('authStatus');
+
+            if (token && user) {
+                regBtn.classList.add('hidden');
+                loginBtn.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+                status.className = 'auth-status success';
+                status.innerHTML = `✅ Welcome, ${user.username}!`;
+            } else {
+                regBtn.classList.remove('hidden');
+                loginBtn.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
+                status.className = 'auth-status info';
+                status.textContent = 'Please login to access full features';
+            }
+
+            updateInput();
+        }
+
+        async function register() {
+            if (!backendOnline) {
+                toast('Backend is offline', 'error');
+                return;
+            }
+
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!username || !email || !password) {
+                toast('Please fill all fields', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${backendUrl}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    toast('Registration successful! Please login.', 'success');
+                    document.getElementById('username').value = '';
+                    document.getElementById('email').value = '';
+                    document.getElementById('password').value = '';
+                } else {
+                    toast(data.error || 'Registration failed', 'error');
+                }
+            } catch (err) {
+                toast('Registration error: ' + err.message, 'error');
+            }
+        }
+
+        async function login() {
+            if (!backendOnline) {
+                toast('Backend is offline', 'error');
+                return;
+            }
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                toast('Please enter email and password', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${backendUrl}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    token = data.token;
+                    user = data.user;
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('user', JSON.stringify(user));
+
+                    // Don't clear password immediately to allow Chrome to save it
+                    setTimeout(() => {
+                        document.getElementById('email').value = '';
+                        document.getElementById('password').value = '';
+                    }, 500);
+
+                    updateAuth();
+                    addMsg('system', `Welcome ${user.username}! You now have full access. 🎉`);
+                    toast('Login successful!', 'success');
+                } else {
+                    toast(data.error || 'Login failed', 'error');
+                }
+            } catch (err) {
+                toast('Login error: ' + err.message, 'error');
+            }
+        }
+
+        function logout() {
+            token = null;
+            user = null;
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            updateAuth();
+            addMsg('system', 'You have been logged out.');
+            toast('Logged out successfully', 'success');
+        }
+
+        async function send() {
+            const input = document.getElementById('input');
+            const msg = input.value.trim();
+
+            if (!msg) return;
+
+            input.value = '';
+            input.style.height = 'auto';
+
+            addMsg('user', msg);
+            showTyping();
+
+            try {
+                if (directMode) {
+                    if (!aiOnline) throw new Error('AI Engine is offline');
+
+                    const res = await fetch(`${AI_URL}/api/respond`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: msg })
+                    });
+
+                    const data = await res.json();
+
+                    if (res.ok) {
+                        addMsg('ai', data.reply);
+                    } else {
+                        throw new Error(data.error || 'AI response failed');
+                    }
+                } else {
+                    if (!backendOnline) throw new Error('Backend is offline');
+                    if (!token) throw new Error('Please login first');
+
+                    const res = await fetch(`${backendUrl}/api/chat`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': token
+                        },
+                        body: JSON.stringify({ content: msg })
+                    });
+
+                    const data = await res.json();
+
+                    if (res.ok) {
+                        addMsg('ai', data.response);
+                    } else {
+                        throw new Error(data.error || 'Chat failed');
+                    }
+                }
+            } catch (err) {
+                addMsg('error', `❌ ${err.message}`);
+                if (err.message.includes('offline')) {
+                    checkServices();
+                }
+            } finally {
+                hideTyping();
+            }
+        }
+
+        function ask(question) {
+            document.getElementById('input').value = question;
+            send();
+        }
+
+        function addMsg(type, text) {
+            const messages = document.getElementById('messages');
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            div.textContent = text;
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function showTyping() {
+            const typing = document.getElementById('typing');
+            const messages = document.getElementById('messages');
+            typing.style.display = 'flex';
+            messages.appendChild(typing);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function hideTyping() {
+            document.getElementById('typing').style.display = 'none';
+        }
+
+        function clearChat() {
+            const messages = document.getElementById('messages');
+            messages.innerHTML = '<div class="message system">Chat cleared! Ready for new conversation. 🗑️</div>';
+            toast('Chat cleared!', 'success');
+        }
+
+        function toast(msg, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>

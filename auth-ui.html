@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mr. Elijah - AI Student Companion</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+        // Authentication & Profile Management System
+        class AuthManager {
+            constructor() {
+                this.currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+                this.users = JSON.parse(localStorage.getItem('users')) || [];
+            }
+
+            isLoggedIn() {
+                return this.currentUser !== null;
+            }
+
+            register(userData) {
+                const existingUser = this.users.find(u => u.email === userData.email);
+                if (existingUser) {
+                    throw new Error('User already exists');
+                }
+                
+                const newUser = {
+                    id: Date.now().toString(),
+                    ...userData,
+                    createdAt: new Date().toISOString()
+                };
+                
+                this.users.push(newUser);
+                localStorage.setItem('users', JSON.stringify(this.users));
+                this.currentUser = newUser;
+                localStorage.setItem('currentUser', JSON.stringify(newUser));
+                return newUser;
+            }
+
+            login(email, password) {
+                const user = this.users.find(u => u.email === email && u.password === password);
+                if (!user) {
+                    throw new Error('Invalid credentials');
+                }
+                
+                this.currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                return user;
+            }
+
+            logout() {
+                this.currentUser = null;
+                localStorage.removeItem('currentUser');
+            }
+
+            updateProfile(updates) {
+                if (!this.currentUser) return;
+                
+                this.currentUser = { ...this.currentUser, ...updates };
+                const userIndex = this.users.findIndex(u => u.id === this.currentUser.id);
+                this.users[userIndex] = this.currentUser;
+                
+                localStorage.setItem('users', JSON.stringify(this.users));
+                localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+            }
+        }
+
+        // Profile Picture Capture System
+        class ProfilePictureManager {
+            constructor() {
+                this.canvas = null;
+                this.video = null;
+                this.stream = null;
+            }
+
+            async captureFromCamera() {
+                return new Promise((resolve, reject) => {
+                    const modal = this.createCameraModal(resolve, reject);
+                    document.body.appendChild(modal);
+                });
+            }
+
+            createCameraModal(resolve, reject) {
+                const modal = UIBuilder.createElement('div', {
+                    style: {
+                        position: 'fixed',
+                        top: '0',
+                        left: '0',
+                        width: '100%',
+                        height: '100%',
+                        background: 'rgba(0,0,0,0.8)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: '10000'
+                    }
+                });
+
+                const cameraContainer = UIBuilder.createElement('div', {
+                    style: {
+                        background: 'var(--surface)',
+                        borderRadius: '16px',
+                        padding: '2rem',
+                        maxWidth: '500px',
+                        width: '90%',
+                        textAlign: 'center'
+                    }
+                });
+
+                this.video = UIBuilder.createElement('video', {
+                    autoplay: true,
+                    style: {
+                        width: '100%',
+                        maxWidth: '400px',
+                        borderRadius: '12px',
+                        marginBottom: '1rem'
+                    }
+                });
+
+                this.canvas = UIBuilder.createElement('canvas', {
+                    style: { display: 'none' }
+                });
+
+                const buttonContainer = UIBuilder.createElement('div', {
+                    style: { display: 'flex', gap: '1rem', justifyContent: 'center' }
+                });
+
+                const captureBtn = UIBuilder.button('📸 Capture', async () => {
+                    const imageData = this.captureImage();
+                    this.stopCamera();
+                    modal.remove();
+                    resolve(imageData);
+                }, { variant: 'primary' });
+
+                const cancelBtn = UIBuilder.button('Cancel', () => {
+                    this.stopCamera();
+                    modal.remove();
+                    reject(new Error('Cancelled'));
+                }, { variant: 'secondary' });
+
+                buttonContainer.appendChild(captureBtn);
+                buttonContainer.appendChild(cancelBtn);
+
+                cameraContainer.appendChild(UIBuilder.createElement('h3', {
+                    style: { marginBottom: '1rem', color: 'var(--text)' }
+                }, ['Take Profile Picture']));
+                cameraContainer.appendChild(this.video);
+                cameraContainer.appendChild(this.canvas);
+                cameraContainer.appendChild(buttonContainer);
+
+                modal.appendChild(cameraContainer);
+
+                // Start camera
+                this.startCamera();
+
+                return modal;
+            }
+
+            async startCamera() {
+                try {
+                    this.stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { width: 400, height: 400 } 
+                    });
+                    this.video.srcObject = this.stream;
+                } catch (error) {
+                    console.error('Camera access denied:', error);
+                    alert('Camera access is required to take a profile picture.');
+                }
+            }
+
+            captureImage() {
+                const context = this.canvas.getContext('2d');
+                this.canvas.width = 400;
+                this.canvas.height = 400;
+                
+                context.drawImage(this.video, 0, 0, 400, 400);
+                return this.canvas.toDataURL('image/jpeg', 0.8);
+            }
+
+            stopCamera() {
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                    this.stream = null;
+                }
+            }
+
+            selectFromGallery() {
+                return new Promise((resolve, reject) => {
+                    const input = UIBuilder.createElement('input', {
+                        type: 'file',
+                        accept: 'image/*',
+                        style: { display: 'none' },
+                        onChange: (e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                                const reader = new FileReader();
+                                reader.onload = (e) => resolve(e.target.result);
+                                reader.onerror = () => reject(new Error('Failed to read file'));
+                                reader.readAsDataURL(file);
+                            } else {
+                                reject(new Error('No file selected'));
+                            }
+                        }
+                    });
+                    
+                    document.body.appendChild(input);
+                    input.click();
+                    document.body.removeChild(input);
+                });
+            }
+        }
+
+        // Theme Management (same as before)
+        class ThemeManager {
+            constructor() {
+                this.isDark = localStorage.getItem('theme') === 'dark' || false;
+                this.themes = {
+                    light: {
+                        primary: '#667eea',
+                        secondary: '#764ba2',
+                        background: '#f8fafc',
+                        surface: '#ffffff',
+                        text: '#1e293b',
+                        textSecondary: '#64748b',
+                        border: '#e2e8f0',
+                        success: '#10b981',
+                        error: '#ef4444',
+                        gradient: 'linear-gradient(135deg, #667eea, #764ba2)',
+                        sidebarGradient: 'linear-gradient(180deg, #667eea, #764ba2)',
+                        shadow: '0 20px 40px rgba(0,0,0,0.1)',
+                        cardShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                    },
+                    dark: {
+                        primary: '#818cf8',
+                        secondary: '#a78bfa',
+                        background: '#0f172a',
+                        surface: '#1e293b',
+                        text: '#f1f5f9',
+                        textSecondary: '#94a3b8',
+                        border: '#334155',
+                        success: '#22c55e',
+                        error: '#f87171',
+                        gradient: 'linear-gradient(135deg, #1e293b, #0f172a)',
+                        sidebarGradient: 'linear-gradient(180deg, #1e293b, #0f172a)',
+                        shadow: '0 20px 40px rgba(0,0,0,0.3)',
+                        cardShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                    }
+                };
+            }
+
+            get current() {
+                return this.themes[this.isDark ? 'dark' : 'light'];
+            }
+
+            toggle() {
+                this.isDark = !this.isDark;
+                localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
+                this.apply();
+            }
+
+            apply() {
+                const theme = this.current;
+                const root = document.documentElement;
+                Object.entries(theme).forEach(([key, value]) => {
+                    root.style.setProperty(`--${key}`, value);
+                });
+            }
+        }
+
+        // UI Component Builder (simplified version)
+        class UIBuilder {
+            static createElement(tag, props = {}, children = []) {
+                const element = document.createElement(tag);
+                
+                Object.entries(props).forEach(([key, value]) => {
+                    if (key === 'style') {
+                        Object.assign(element.style, value);
+                    } else if (key === 'className') {
+                        element.className = value;
+                    } else if (key.startsWith('on')) {
+                        element.addEventListener(key.slice(2).toLowerCase(), value);
+                    } else {
+                        element.setAttribute(key, value);
+                    }
+                });
+
+                children.forEach(child => {
+                    if (typeof child === 'string') {
+                        element.appendChild(document.createTextNode(child));
+                    } else if (child instanceof HTMLElement) {
+                        element.appendChild(child);
+                    }
+                });
+
+                return element;
+            }
+
+            static button(text, onClick, options = {}) {
+                const { variant = 'primary', icon } = options;
+                
+                const buttonStyles = {
+                    primary: {
+                        background: 'var(--gradient)',
+                        color: 'white',
+                        border: 'none'
+                    },
+                    secondary: {
+                        background: 'var(--surface)',
+                        color: 'var(--text)',
+                        border: '1px solid var(--border)'
+                    }
+                };
+
+                const children = [];
+                if (icon) children.push(this.createElement('i', { className: icon, style: { marginRight: '8px' } }));
+                if (text) children.push(text);
+
+                return this.createElement('button', {
+                    style: {
+                        ...buttonStyles[variant],
+                        padding: '0.75rem 1.5rem',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        fontWeight: '600',
+                        transition: 'all 0.3s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px'
+                    },
+                    onClick: onClick
+                }, children);
+            }
+
+            static input(props = {}) {
+                return this.createElement('input', {
+                    style: {
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        border: '2px solid var(--border)',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        background: 'var(--background)',
+                        color: 'var(--text)',
+                        transition: 'border-color 0.3s ease',
+                        ...props.style
+                    },
+                    onFocus: (e) => {
+                        e.target.style.borderColor = 'var(--primary)';
+                    },
+                    onBlur: (e) => {
+                        e.target.style.borderColor = 'var(--border)';
+                    },
+                    ...props
+                });
+            }
+        }
+
+        // Main Application with Authentication
+        class AIStudentCompanion {
+            constructor() {
+                this.theme = new ThemeManager();
+                this.auth = new AuthManager();
+                this.profileManager = new ProfilePictureManager();
+                this.API = 'http://localhost:3001';
+                
+                this.init();
+            }
+
+            init() {
+                this.theme.apply();
+                this.createStyles();
+                
+                if (this.auth.isLoggedIn()) {
+                    this.showMainApp();
+                } else {
+                    this.showAuthScreen();
+                }
+            }
+
+            createStyles() {
+                const style = UIBuilder.createElement('style', {}, [`
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body {
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                        background: var(--gradient);
+                        min-height: 100vh;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 20px;
+                        transition: all 0.3s ease;
+                    }
+                    .auth-container {
+                        background: var(--surface);
+                        border-radius: 24px;
+                        box-shadow: var(--shadow);
+                        padding: 3rem;
+                        width: 100%;
+                        max-width: 400px;
+                        text-align: center;
+                    }
+                    .profile-picture {
+                        width: 120px;
+                        height: 120px;
+                        border-radius: 50%;
+                        margin-bottom: 1rem;
+                        text-align: left;
+                    }
+                    .form-group label {
+                        display: block;
+                        margin-bottom: 0.5rem;
+                        color: var(--text);
+                        font-weight: 500;
+                    }
+                    .picture-options {
+                        display: flex;
+                        gap: 0.5rem;
+                        margin-top: 0.5rem;
+                    }
+                    .app-container {
+                        width: 100%;
+                        max-width: 1400px;
+                        background: var(--surface);
+                        border-radius: 24px;
+                        box-shadow: var(--shadow);
+                        display: grid;
+                        grid-template-columns: 320px 1fr;
+                        height: 90vh;
+                        overflow: hidden;
+                    }
+                    .sidebar {
+                        background: var(--sidebarGradient);
+                        color: white;
+                        padding: 2rem;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 1rem;
+                    }
+                    .user-profile {
+                        display: flex;
+                        align-items: center;
+                        gap: 1rem;
+                        padding: 1rem;
+                        background: rgba(255,255,255,0.1);
+                        border-radius: 12px;
+                        margin-bottom: 1rem;
+                    }
+                    .user-avatar {
+                        width: 48px;
+                        height: 48px;
+                        border-radius: 50%;
+                        background: rgba(255,255,255,0.2);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        overflow: hidden;
+                    }
+                    .user-avatar img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                    }
+
+                    @keyframes slideIn {
+                        from {
+                            opacity: 0;
+                            transform: translateY(10px);
+                        }
+                        to {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                    }
+
+                    @keyframes spin {
+                        from {
+                            transform: rotate(0deg);
+                        }
+                        to {
+                            transform: rotate(360deg);
+                        }
+                    }
+                `]);
+                document.head.appendChild(style);
+            }
+
+            showAuthScreen() {
+                const app = document.getElementById('app');
+                app.innerHTML = '';
+
+                const authContainer = UIBuilder.createElement('div', {
+                    className: 'auth-container'
+                });
+
+                // Theme toggle
+                const themeToggle = UIBuilder.button('', () => this.theme.toggle(), {
+                    variant: 'secondary',
+                    icon: this.theme.isDark ? 'fas fa-sun' : 'fas fa-moon'
+                });
+                themeToggle.style.position = 'absolute';
+                themeToggle.style.top = '1rem';
+                themeToggle.style.right = '1rem';
+                themeToggle.style.width = '48px';
+                themeToggle.style.height = '48px';
+                themeToggle.style.borderRadius = '50%';
+
+                // Logo
+                const logo = UIBuilder.createElement('div', {
+                    style: {
+                        fontSize: '2rem',
+                        fontWeight: 'bold',
+                        color: 'var(--text)',
+                        marginBottom: '2rem'
+                    }
+                }, ['🎓 Mr. Elijah']);
+
+                // Profile picture section
+                this.profilePicture = UIBuilder.createElement('div', {
+                    className: 'profile-picture',
+                    onClick: () => this.showPictureOptions()
+                }, ['📷']);
+
+                const pictureText = UIBuilder.createElement('p', {
+                    style: {
+                        color: 'var(--textSecondary)',
+                        fontSize: '0.875rem',
+                        marginBottom: '1rem'
+                    }
+                }, ['Click to add profile picture']);
+
+                // Auth form
+                this.authForm = this.createAuthForm();
+
+                authContainer.appendChild(logo);
+                authContainer.appendChild(this.profilePicture);
+                authContainer.appendChild(pictureText);
+                authContainer.appendChild(this.authForm);
+
+                app.appendChild(themeToggle);
+                app.appendChild(authContainer);
+            }
+
+            createAuthForm() {
+                const form = UIBuilder.createElement('div');
+
+                // Name field
+                const nameGroup = UIBuilder.createElement('div', { className: 'form-group' });
+                nameGroup.appendChild(UIBuilder.createElement('label', {}, ['Full Name']));
+                this.nameInput = UIBuilder.input({ placeholder: 'Enter your name', required: true });
+                nameGroup.appendChild(this.nameInput);
+
+                // Email field
+                const emailGroup = UIBuilder.createElement('div', { className: 'form-group' });
+                emailGroup.appendChild(UIBuilder.createElement('label', {}, ['Email']));
+                this.emailInput = UIBuilder.input({ type: 'email', placeholder: 'Enter your email', required: true });
+                emailGroup.appendChild(this.emailInput);
+
+                // Password field
+                const passwordGroup = UIBuilder.createElement('div', { className: 'form-group' });
+                passwordGroup.appendChild(UIBuilder.createElement('label', {}, ['Password']));
+                this.passwordInput = UIBuilder.input({ type: 'password', placeholder: 'Enter your password', required: true });
+                passwordGroup.appendChild(this.passwordInput);
+
+                // Buttons
+                const buttonGroup = UIBuilder.createElement('div', {
+                    style: { display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '2rem' }
+                });
+
+                const registerBtn = UIBuilder.button('Create Account', () => this.register(), {
+                    variant: 'primary'
+                });
+
+                const loginBtn = UIBuilder.button('Login', () => this.login(), {
+                    variant: 'secondary'
+                });
+
+                buttonGroup.appendChild(registerBtn);
+                buttonGroup.appendChild(loginBtn);
+
+                form.appendChild(nameGroup);
+                form.appendChild(emailGroup);
+                form.appendChild(passwordGroup);
+                form.appendChild(buttonGroup);
+
+                return form;
+            }
+
+            async showPictureOptions() {
+                const modal = UIBuilder.createElement('div', {
+                    style: {
+                        position: 'fixed',
+                        top: '0',
+                        left: '0',
+                        width: '100%',
+                        height: '100%',
+                        background: 'rgba(0,0,0,0.8)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: '10000'
+                    },
+                    onClick: (e) => {
+                        if (e.target === modal) modal.remove();
+                    }
+                });
+
+                const optionsContainer = UIBuilder.createElement('div', {
+                    style: {
+                        background: 'var(--surface)',
+                        borderRadius: '16px',
+                        padding: '2rem',
+                        textAlign: 'center',
+                        minWidth: '300px'
+                    }
+                });
+
+                const title = UIBuilder.createElement('h3', {
+                    style: { marginBottom: '2rem', color: 'var(--text)' }
+                }, ['Choose Profile Picture']);
+
+                const buttonContainer = UIBuilder.createElement('div', {
+                    style: { display: 'flex', flexDirection: 'column', gap: '1rem' }
+                });
+
+                const cameraBtn = UIBuilder.button('📷 Take Photo', async () => {
+                    try {
+                        const imageData = await this.profileManager.captureFromCamera();
+                        this.setProfilePicture(imageData);
+                        modal.remove();
+                    } catch (error) {
+                        console.error('Camera capture failed:', error);
+                    }
+                }, { variant: 'primary' });
+
+                const galleryBtn = UIBuilder.button('🖼️ Choose from Gallery', async () => {
+                    try {
+                        const imageData = await this.profileManager.selectFromGallery();
+                        this.setProfilePicture(imageData);
+                        modal.remove();
+                    } catch (error) {
+                        console.error('Gallery selection failed:', error);
+                    }
+                }, { variant: 'secondary' });
+
+                buttonContainer.appendChild(cameraBtn);
+                buttonContainer.appendChild(galleryBtn);
+
+                optionsContainer.appendChild(title);
+                optionsContainer.appendChild(buttonContainer);
+                modal.appendChild(optionsContainer);
+
+                document.body.appendChild(modal);
+            }
+
+            setProfilePicture(imageData) {
+                this.selectedProfilePicture = imageData;
+                this.profilePicture.innerHTML = '';
+                const img = UIBuilder.createElement('img', { src: imageData });
+                this.profilePicture.appendChild(img);
+            }
+
+            async register() {
+                try {
+                    const userData = {
+                        name: this.nameInput.value,
+                        email: this.emailInput.value,
+                        password: this.passwordInput.value,
+                        profilePicture: this.selectedProfilePicture || null
+                    };
+
+                    if (!userData.name || !userData.email || !userData.password) {
+                        alert('Please fill in all fields');
+                        return;
+                    }
+
+                    this.auth.register(userData);
+                    this.showMainApp();
+                } catch (error) {
+                    alert(error.message);
+                }
+            }
+
+            async login() {
+                try {
+                    const email = this.emailInput.value;
+                    const password = this.passwordInput.value;
+
+                    if (!email || !password) {
+                        alert('Please enter email and password');
+                        return;
+                    }
+
+                    this.auth.login(email, password);
+                    this.showMainApp();
+                } catch (error) {
+                    alert(error.message);
+                }
+            }
+
+            showMainApp() {
+                const app = document.getElementById('app');
+                app.innerHTML = '';
+
+                // Create main app interface (simplified version)
+                const container = UIBuilder.createElement('div', {
+                    className: 'app-container'
+                });
+
+                const sidebar = this.createSidebar();
+                const mainContent = this.createMainContent();
+
+                container.appendChild(sidebar);
+                container.appendChild(mainContent);
+                app.appendChild(container);
+            }
+
+            createSidebar() {
+                const sidebar = UIBuilder.createElement('div', {
+                    className: 'sidebar'
+                });
+
+                // User profile section
+                const userProfile = UIBuilder.createElement('div', {
+                    className: 'user-profile'
+                });
+
+                const userAvatar = UIBuilder.createElement('div', {
+                    className: 'user-avatar'
+                });
+
+                if (this.auth.currentUser.profilePicture) {
+                    const img = UIBuilder.createElement('img', {
+                        src: this.auth.currentUser.profilePicture
+                    });
+                    userAvatar.appendChild(img);
+                } else {
+                    const userName = this.auth.currentUser.name || 'User';
+                    userAvatar.textContent = userName.charAt(0).toUpperCase();
+                }
+
+                const userInfo = UIBuilder.createElement('div');
+                userInfo.appendChild(UIBuilder.createElement('div', {
+                    style: { fontWeight: 'bold', fontSize: '1rem' }
+                }, [this.auth.currentUser.name || 'User']));
+                userInfo.appendChild(UIBuilder.createElement('div', {
+                    style: { fontSize: '0.875rem', opacity: '0.8' }
+                }, [this.auth.currentUser.email || 'user@example.com']));
+
+                userProfile.appendChild(userAvatar);
+                userProfile.appendChild(userInfo);
+
+                // Logout button
+                const logoutBtn = UIBuilder.button('Logout', () => {
+                    this.auth.logout();
+                    this.showAuthScreen();
+                }, {
+                    variant: 'secondary',
+                    icon: 'fas fa-sign-out-alt'
+                });
+
+                sidebar.appendChild(userProfile);
+                sidebar.appendChild(UIBuilder.createElement('div', {
+                    style: { fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center', padding: '1rem' }
+                }, ['🎓 Mr. Elijah']));
+                sidebar.appendChild(logoutBtn);
+
+                return sidebar;
+            }
+
+            createMainContent() {
+                const mainContent = UIBuilder.createElement('div', {
+                    style: {
+                        display: 'flex',
+                        flexDirection: 'column',
+                        background: 'var(--background)'
+                    }
+                });
+
+                // Header
+                const header = this.createHeader();
+                
+                // Chat area
+                const chatArea = this.createChatArea();
+
+                mainContent.appendChild(header);
+                mainContent.appendChild(chatArea);
+
+                return mainContent;
+            }
+
+            createHeader() {
+                const header = UIBuilder.createElement('div', {
+                    style: {
+                        background: 'var(--surface)',
+                        padding: '1.5rem 2rem',
+                        borderBottom: '1px solid var(--border)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                    }
+                });
+
+                const headerLeft = UIBuilder.createElement('div');
+                
+                const title = UIBuilder.createElement('h1', {
+                    style: {
+                        fontSize: '1.5rem',
+                        fontWeight: '600',
+                        color: 'var(--text)',
+                        marginBottom: '0.5rem'
+                    }
+                }, ['Mr. Elijah']);
+
+                this.statusBadge = UIBuilder.createElement('div', {
+                    style: {
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '0.5rem 1rem',
+                        borderRadius: '20px',
+                        fontSize: '0.875rem',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        color: 'var(--success)',
+                        border: '1px solid var(--success)'
+                    }
+                }, [
+                    UIBuilder.createElement('span', { 
+                        style: {
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: 'currentColor',
+                            animation: 'pulse 2s infinite'
+                        }
+                    }),
+                    UIBuilder.createElement('span', {}, ['Online • llama3.2:1b'])
+                ]);
+
+                headerLeft.appendChild(title);
+                headerLeft.appendChild(this.statusBadge);
+
+                const headerActions = UIBuilder.createElement('div', {
+                    style: { display: 'flex', gap: '1rem' }
+                });
+
+                const clearBtn = UIBuilder.button('Clear', () => this.clearChat(), {
+                    variant: 'secondary'
+                });
+
+                const themeBtn = UIBuilder.button('', () => this.theme.toggle(), {
+                    variant: 'secondary'
+                });
+                themeBtn.innerHTML = this.theme.isDark ? '☀️' : '🌙';
+
+                headerActions.appendChild(clearBtn);
+                headerActions.appendChild(themeBtn);
+
+                header.appendChild(headerLeft);
+                header.appendChild(headerActions);
+
+                return header;
+            }
+
+            createChatArea() {
+                const chatContainer = UIBuilder.createElement('div', {
+                    style: {
+                        flex: '1',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        padding: '2rem'
+                    }
+                });
+
+                // Quick actions
+                const quickActions = UIBuilder.createElement('div', {
+                    style: {
+                        display: 'flex',
+                        gap: '0.75rem',
+                        flexWrap: 'wrap',
+                        marginBottom: '1rem'
+                    }
+                });
+
+                const actions = [
+                    { icon: '🧬', text: 'Biology' },
+                    { icon: '🔢', text: 'Math' },
+                    { icon: '⚛️', text: 'Physics' },
+                    { icon: '💡', text: 'Tips' }
+                ];
+
+                actions.forEach(action => {
+                    const actionBtn = UIBuilder.createElement('div', {
+                        style: {
+                            padding: '0.5rem 1rem',
+                            background: 'var(--surface)',
+                            border: '2px solid var(--border)',
+                            borderRadius: '12px',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.3s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            color: 'var(--text)'
+                        },
+                        onClick: () => this.sendMessage(`Help me with ${action.text.toLowerCase()}`)
+                    }, [action.icon + ' ' + action.text]);
+                    
+                    actionBtn.addEventListener('mouseenter', () => {
+                        actionBtn.style.borderColor = 'var(--primary)';
+                        actionBtn.style.background = 'var(--primary)';
+                        actionBtn.style.color = 'white';
+                        actionBtn.style.transform = 'translateY(-2px)';
+                    });
+                    
+                    actionBtn.addEventListener('mouseleave', () => {
+                        actionBtn.style.borderColor = 'var(--border)';
+                        actionBtn.style.background = 'var(--surface)';
+                        actionBtn.style.color = 'var(--text)';
+                        actionBtn.style.transform = 'translateY(0)';
+                    });
+                    
+                    quickActions.appendChild(actionBtn);
+                });
+
+                // Messages area
+                this.messagesArea = UIBuilder.createElement('div', {
+                    style: {
+                        flex: '1',
+                        overflowY: 'auto',
+                        padding: '1rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '1rem',
+                        maxHeight: 'calc(90vh - 300px)',
+                        background: 'var(--background)',
+                        borderRadius: '12px',
+                        border: '1px solid var(--border)'
+                    }
+                });
+
+                // Welcome message
+                this.welcomeMessage = UIBuilder.createElement('div', {
+                    style: {
+                        textAlign: 'center',
+                        padding: '3rem',
+                        color: 'var(--textSecondary)',
+                        fontSize: '1.1rem'
+                    }
+                }, [
+                    UIBuilder.createElement('div', {
+                        style: { fontSize: '3rem', marginBottom: '1rem' }
+                    }, ['🎓']),
+                    UIBuilder.createElement('h2', {
+                        style: { marginBottom: '0.5rem', color: 'var(--text)' }
+                    }, [`Hello ${this.auth.currentUser.name || 'User'}!`]),
+                    'Ask me anything about your studies. I\'m here to help you learn!'
+                ]);
+
+                this.messagesArea.appendChild(this.welcomeMessage);
+
+                // Input area
+                const inputArea = this.createInputArea();
+
+                chatContainer.appendChild(quickActions);
+                chatContainer.appendChild(this.messagesArea);
+                chatContainer.appendChild(inputArea);
+
+                return chatContainer;
+            }
+
+            createInputArea() {
+                const inputArea = UIBuilder.createElement('div', {
+                    style: {
+                        background: 'var(--surface)',
+                        borderRadius: '20px',
+                        padding: '1.5rem',
+                        boxShadow: 'var(--cardShadow)',
+                        display: 'flex',
+                        gap: '1rem',
+                        alignItems: 'end',
+                        border: '1px solid var(--border)',
+                        marginTop: '1rem'
+                    }
+                });
+
+                this.messageInput = UIBuilder.createElement('textarea', {
+                    placeholder: 'Ask anything...',
+                    rows: '1',
+                    style: {
+                        flex: '1',
+                        border: '2px solid var(--border)',
+                        borderRadius: '16px',
+                        padding: '1rem 1.5rem',
+                        fontSize: '1rem',
+                        fontFamily: 'inherit',
+                        resize: 'none',
+                        maxHeight: '120px',
+                        background: 'var(--background)',
+                        color: 'var(--text)',
+                        transition: 'all 0.3s ease'
+                    },
+                    onKeyDown: (e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            this.sendMessage();
+                        }
+                    },
+                    onInput: (e) => {
+                        e.target.style.height = 'auto';
+                        e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                    },
+                    onFocus: (e) => {
+                        e.target.style.borderColor = 'var(--primary)';
+                    },
+                    onBlur: (e) => {
+                        e.target.style.borderColor = 'var(--border)';
+                    }
+                });
+
+                const sendBtn = UIBuilder.button('📤 Send', () => this.sendMessage(), {
+                    variant: 'primary'
+                });
+
+                inputArea.appendChild(this.messageInput);
+                inputArea.appendChild(sendBtn);
+
+                return inputArea;
+            }
+
+            addMessage(role, content) {
+                if (this.welcomeMessage && this.welcomeMessage.parentNode) {
+                    this.welcomeMessage.remove();
+                }
+
+                const message = UIBuilder.createElement('div', {
+                    style: {
+                        display: 'flex',
+                        gap: '1rem',
+                        animation: 'slideIn 0.3s ease',
+                        flexDirection: role === 'user' ? 'row-reverse' : 'row'
+                    }
+                });
+
+                const avatar = UIBuilder.createElement('div', {
+                    style: {
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.2rem',
+                        flexShrink: '0',
+                        boxShadow: 'var(--cardShadow)',
+                        background: role === 'user' ? 'linear-gradient(135deg, #f093fb, var(--primary))' : 'var(--gradient)',
+                        color: 'white'
+                    }
+                }, [role === 'user' ? '👤' : '🤖']);
+
+                const messageContent = UIBuilder.createElement('div', {
+                    style: {
+                        maxWidth: '70%',
+                        background: role === 'user' ? 'var(--gradient)' : 'var(--surface)',
+                        padding: '1.5rem',
+                        borderRadius: '16px',
+                        boxShadow: 'var(--cardShadow)',
+                        border: role === 'user' ? 'none' : '1px solid var(--border)',
+                        color: role === 'user' ? 'white' : 'var(--text)'
+                    }
+                }, [content]);
+
+                message.appendChild(avatar);
+                message.appendChild(messageContent);
+
+                this.messagesArea.appendChild(message);
+                this.messagesArea.scrollTop = this.messagesArea.scrollHeight;
+            }
+
+            async sendMessage(text = null) {
+                const message = text || this.messageInput.value.trim();
+                if (!message) return;
+
+                if (!text) {
+                    this.messageInput.value = '';
+                    this.messageInput.style.height = 'auto';
+                }
+
+                this.addMessage('user', message);
+
+                // Add loading indicator
+                const loadingMessage = this.addLoadingMessage();
+
+                try {
+                    // Add timeout to prevent freezing
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+                    const response = await fetch(`${this.API}/api/respond`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            message: message,
+                            sessionId: this.auth.currentUser.id
+                        }),
+                        signal: controller.signal
+                    });
+
+                    clearTimeout(timeoutId);
+                    
+                    // Remove loading message
+                    if (loadingMessage && loadingMessage.parentNode) {
+                        loadingMessage.remove();
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    this.addMessage('ai', data.response || data.fallback || 'Sorry, I couldn\'t process that request.');
+                    
+                } catch (error) {
+                    // Remove loading message
+                    if (loadingMessage && loadingMessage.parentNode) {
+                        loadingMessage.remove();
+                    }
+                    
+                    console.error('Error sending message:', error);
+                    
+                    if (error.name === 'AbortError') {
+                        this.addMessage('ai', '⏰ Request timed out. The AI service might be slow or unavailable. Please try again.');
+                    } else if (error.message.includes('Failed to fetch')) {
+                        this.addMessage('ai', '🔌 Cannot connect to AI service. Please make sure the services are running by using the LAUNCH.bat file.');
+                    } else {
+                        this.addMessage('ai', `❌ Error: ${error.message}. Please check if the AI services are running.`);
+                    }
+                }
+            }
+
+            addLoadingMessage() {
+                const message = UIBuilder.createElement('div', {
+                    style: {
+                        display: 'flex',
+                        gap: '1rem',
+                        animation: 'slideIn 0.3s ease'
+                    }
+                });
+
+                const avatar = UIBuilder.createElement('div', {
+                    style: {
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.2rem',
+                        flexShrink: '0',
+                        boxShadow: 'var(--cardShadow)',
+                        background: 'var(--gradient)',
+                        color: 'white'
+                    }
+                }, ['🤖']);
+
+                const messageContent = UIBuilder.createElement('div', {
+                    style: {
+                        maxWidth: '70%',
+                        background: 'var(--surface)',
+                        padding: '1.5rem',
+                        borderRadius: '16px',
+                        boxShadow: 'var(--cardShadow)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px'
+                    }
+                }, [
+                    UIBuilder.createElement('div', {
+                        style: {
+                            width: '20px',
+                            height: '20px',
+                            border: '2px solid var(--primary)',
+                            borderTop: '2px solid transparent',
+                            borderRadius: '50%',
+                            animation: 'spin 1s linear infinite'
+                        }
+                    }),
+                    'Mr. Elijah is thinking...'
+                ]);
+
+                message.appendChild(avatar);
+                message.appendChild(messageContent);
+
+                this.messagesArea.appendChild(message);
+                this.messagesArea.scrollTop = this.messagesArea.scrollHeight;
+
+                return message;
+            }
+
+            clearChat() {
+                this.messagesArea.innerHTML = '';
+                this.messagesArea.appendChild(this.welcomeMessage);
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new AIStudentCompanion();
+        });
+    </script>
+</body>
+</html>

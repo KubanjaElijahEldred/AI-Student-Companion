@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Student Companion - Unified Chatbot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .chatbot-container {
+            width: 100%;
+            max-width: 900px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .status-bar {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 0.8rem;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+
+        .status-online {
+            background: #28a745;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .mode-selector {
+            background: #f8f9fa;
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            padding: 8px 16px;
+            border: 2px solid #4f46e5;
+            background: white;
+            color: #4f46e5;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .mode-btn:hover {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .auth-section {
+            background: #fff3cd;
+            padding: 15px;
+            border-bottom: 1px solid #ffeaa7;
+            display: none;
+        }
+
+        .auth-section.show {
+            display: block;
+        }
+
+        .auth-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .auth-form input {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 120px;
+        }
+
+        .auth-form button {
+            padding: 8px 16px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .auth-form button:hover {
+            background: #3730a3;
+        }
+
+        .auth-status {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background: #4f46e5;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .ai-message {
+            background: white;
+            color: #374151;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .system-message {
+            background: #e0f2fe;
+            color: #0277bd;
+            align-self: center;
+            font-style: italic;
+            text-align: center;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            align-self: flex-start;
+            border: 1px solid #ffcdd2;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+            max-width: 80px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #9ca3af;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .quick-actions {
+            padding: 15px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .quick-actions::-webkit-scrollbar {
+            display: none;
+        }
+
+        .quick-btn {
+            padding: 8px 16px;
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .quick-btn:hover {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .chat-input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .chat-input-form {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 25px;
+            outline: none;
+            font-size: 16px;
+            resize: none;
+            max-height: 100px;
+            min-height: 48px;
+        }
+
+        .chat-input:focus {
+            border-color: #4f46e5;
+        }
+
+        .send-button {
+            padding: 12px 20px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            min-width: 80px;
+        }
+
+        .send-button:hover {
+            background: #3730a3;
+            transform: translateY(-1px);
+        }
+
+        .send-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .api-test-section {
+            display: none;
+            padding: 20px;
+            background: #f8f9fa;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .api-test-section.show {
+            display: block;
+        }
+
+        .api-test-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .api-test-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .api-test-card h4 {
+            color: #4f46e5;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .api-test-btn {
+            width: 100%;
+            padding: 8px 12px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .api-test-btn:hover {
+            background: #3730a3;
+        }
+
+        .api-result {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.7rem;
+            max-height: 100px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 8px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4f46e5;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .help-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .help-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .help-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .chatbot-container {
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .api-test-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .mode-selector {
+                padding: 10px;
+            }
+
+            .mode-btn {
+                font-size: 0.8rem;
+                padding: 6px 12px;
+            }
+
+            .auth-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .auth-form input {
+                min-width: auto;
+                margin-bottom: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chatbot-container">
+        <div class="header">
+            <h1>🤖 AI Student Companion</h1>
+            <p>Your unified study assistant with all features in one place</p>
+            <div class="status-bar">
+                <div class="status-item">
+                    <span class="status-dot" id="aiEngineStatus"></span>
+                    <span>AI Engine</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot" id="backendStatus"></span>
+                    <span>Backend</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot status-online"></span>
+                    <span>Interface</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" onclick="switchMode('direct')">💬 Direct Chat</button>
+            <button class="mode-btn" onclick="switchMode('auth')">🔐 Full App</button>
+            <button class="mode-btn" onclick="switchMode('api')">🔧 API Test</button>
+            <button class="mode-btn" onclick="clearChat()">🗑️ Clear</button>
+            <button class="mode-btn" onclick="toggleHelp()">❓ Help</button>
+        </div>
+
+        <!-- Authentication Section -->
+        <div class="auth-section" id="authSection">
+            <div class="auth-form">
+                <input type="text" id="username" placeholder="Username" />
+                <input type="email" id="email" placeholder="Email" />
+                <input type="password" id="password" placeholder="Password" />
+                <button onclick="register()">Register</button>
+                <button onclick="login()">Login</button>
+                <button onclick="logout()" style="background: #dc3545;">Logout</button>
+            </div>
+            <div class="auth-status" id="authStatus">Ready for registration or login</div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="chat-area" id="chatArea">
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="askQuestion('Hello! Can you help me with math?')">📊 Math Help</button>
+                <button class="quick-btn" onclick="askQuestion('Explain photosynthesis to me')">🌱 Science</button>
+                <button class="quick-btn" onclick="askQuestion('Tell me about World War II')">📚 History</button>
+                <button class="quick-btn" onclick="askQuestion('How can I improve my study habits?')">💡 Study Tips</button>
+                <button class="quick-btn" onclick="askQuestion('What is calculus used for?')">🔢 Calculus</button>
+                <button class="quick-btn" onclick="askQuestion('Explain the periodic table')">⚛️ Chemistry</button>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="system-message">
+                    🌟 Welcome to AI Student Companion! Choose your mode above and start learning.
+                </div>
+                <div class="ai-message">
+                    Hello! I'm your AI study companion. I can help you with:
+                    <br>• Mathematics (algebra, calculus, geometry)
+                    <br>• Science (physics, chemistry, biology)
+                    <br>• History and social studies
+                    <br>• Study tips and learning strategies
+                    <br><br>What would you like to learn about today?
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <form class="chat-input-form" onsubmit="sendMessage(event)">
+                    <textarea
+                        class="chat-input"
+                        id="messageInput"
+                        placeholder="Ask me anything about your studies..."
+                        rows="1"
+                    ></textarea>
+                    <button type="submit" class="send-button" id="sendButton">Send</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- API Testing Section -->
+        <div class="api-test-section" id="apiTestSection">
+            <h3 style="color: #2d3748; margin-bottom: 15px;">🔧 API Testing Dashboard</h3>
+            <div class="api-test-grid">
+                <div class="api-test-card">
+                    <h4>AI Engine Tests</h4>
+                    <button class="api-test-btn" onclick="testAIHealth()">Health Check</button>
+                    <button class="api-test-btn" onclick="testAIResponse()">Test Response</button>
+                    <div class="api-result" id="aiTestResult">Ready for testing...</div>
+                </div>
+
+                <div class="api-test-card">
+                    <h4>Backend Tests</h4>
+                    <button class="api-test-btn" onclick="testBackendHealth()">Health Check</button>
+                    <button class="api-test-btn" onclick="testRegistration()">Test Registration</button>
+                    <div class="api-result" id="backendTestResult">Ready for testing...</div>
+                </div>
+
+                <div class="api-test-card">
+                    <h4>Authentication Tests</h4>
+                    <button class="api-test-btn" onclick="testLoginAPI()">Test Login</button>
+                    <button class="api-test-btn" onclick="testProtectedRoute()">Test Chat API</button>
+                    <div class="api-result" id="authTestResult">Ready for testing...</div>
+                </div>
+
+                <div class="api-test-card">
+                    <h4>System Status</h4>
+                    <button class="api-test-btn" onclick="runAllTests()">Run All Tests</button>
+                    <button class="api-test-btn" onclick="clearApiResults()">Clear Results</button>
+                    <div class="api-result" id="systemTestResult">Ready for testing...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Overlay -->
+    <div class="help-overlay" id="helpOverlay">
+        <div class="help-content">
+            <button class="help-close" onclick="toggleHelp()">&times;</button>
+            <h2>🤖 AI Student Companion Help</h2>
+
+            <h3>🔥 Modes:</h3>
+            <ul>
+                <li><strong>Direct Chat:</strong> Chat directly with AI - no login required</li>
+                <li><strong>Full App:</strong> Complete experience with user accounts and history</li>
+                <li><strong>API Test:</strong> Test backend services and APIs</li>
+            </ul>
+
+            <h3>📚 What I can help with:</h3>
+            <ul>
+                <li><strong>Mathematics:</strong> Algebra, Calculus, Geometry, Statistics</li>
+                <li><strong>Science:</strong> Physics, Chemistry, Biology</li>
+                <li><strong>History:</strong> World events, historical periods</li>
+                <li><strong>Study Tips:</strong> Learning strategies, time management</li>
+            </ul>
+
+            <h3>🚀 Quick Start:</h3>
+            <ol>
+                <li>Choose a mode (Direct Chat recommended for beginners)</li>
+                <li>Use quick action buttons or type your question</li>
+                <li>For full features, register an account in Full App mode</li>
+            </ol>
+
+            <h3>⚙️ Troubleshooting:</h3>
+            <ul>
+                <li>Check status indicators in header for service availability</li>
+                <li>If AI Engine is offline, start it with: <code>node ai-engine/index.js</code></li>
+                <li>If Backend is offline, start it with: <code>node backend/demoServer.js</code></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            AI_ENGINE_URL: 'http://localhost:3001',
+            BACKEND_URL: 'http://localhost:5001',
+            FALLBACK_BACKEND_URL: 'http://localhost:5000'
+        };
+
+        // State Management
+        let currentMode = 'direct';
+        let authToken = localStorage.getItem('authToken');
+        let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        let isAIEngineOnline = false;
+        let isBackendOnline = false;
+        let backendUrl = CONFIG.BACKEND_URL;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            checkServices();
+            setInterval(checkServices, 15000);
+
+            // Auto-resize textarea
+            const textarea = document.getElementById('messageInput');
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+            });
+
+            // Enter key handling
+            textarea.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage(e);
+                }
+            });
+
+            updateAuthUI();
+        });
+
+        function initializeApp() {
+            showNotification('🚀 AI Student Companion loaded successfully!', 'success');
+
+            // Add welcome message based on stored auth
+            if (currentUser) {
+                addMessage('system', `Welcome back, ${currentUser.username}! 👋`);
+            }
+        }
+
+        // Service Status Checking
+        async function checkServices() {
+            await checkAIEngine();
+            await checkBackend();
+            updateUIBasedOnServices();
+        }
+
+        async function checkAIEngine() {
+            const statusDot = document.getElementById('aiEngineStatus');
+            try {
+                const response = await fetch(`${CONFIG.AI_ENGINE_URL}/health`, {
+                    signal: AbortSignal.timeout(5000)
+                });
+                if (response.ok) {
+                    statusDot.classList.add('status-online');
+                    isAIEngineOnline = true;
+                } else {
+                    throw new Error('Health check failed');
+                }
+            } catch (error) {
+                statusDot.classList.remove('status-online');
+                isAIEngineOnline = false;
+            }
+        }
+
+        async function checkBackend() {
+            const statusDot = document.getElementById('backendStatus');
+
+            // Try primary backend first
+            try {
+                const response = await fetch(`${CONFIG.BACKEND_URL}/api/health`, {
+                    signal: AbortSignal.timeout(5000)
+                });
+                if (response.ok) {
+                    statusDot.classList.add('status-online');
+                    isBackendOnline = true;
+                    backendUrl = CONFIG.BACKEND_URL;
+                    return;
+                }
+            } catch (error) {
+                // Try fallback backend
+                try {
+                    const response = await fetch(`${CONFIG.FALLBACK_BACKEND_URL}/api/health`, {
+                        signal: AbortSignal.timeout(5000)
+                    });
+                    if (response.ok) {
+                        statusDot.classList.add('status-online');
+                        isBackendOnline = true;
+                        backendUrl = CONFIG.FALLBACK_BACKEND_URL;
+                        return;
+                    }
+                } catch (error2) {
+                    // Both failed
+                }
+            }
+
+            statusDot.classList.remove('status-online');
+            isBackendOnline = false;
+        }
+
+        function updateUIBasedOnServices() {
+            const sendButton = document.getElementById('sendButton');
+            const messageInput = document.getElementById('messageInput');
+
+            if (currentMode === 'direct') {
+                sendButton.disabled = !isAIEngineOnline;
+                messageInput.disabled = !isAIEngineOnline;
+                if (!isAIEngineOnline) {
+                    messageInput.placeholder = "AI Engine offline - please start the service";
+                } else {
+                    messageInput.placeholder = "Ask me anything about your studies...";
+                }
+            } else if (currentMode === 'auth') {
+                sendButton.disabled = !isBackendOnline || !authToken;
+                messageInput.disabled = !isBackendOnline || !authToken;
+                if (!isBackendOnline) {
+                    messageInput.placeholder = "Backend offline - please start the service";
+                } else if (!authToken) {
+                    messageInput.placeholder = "Please login first to start chatting";
+                } else {
+                    messageInput.placeholder = "Ask me anything about your studies...";
+                }
+            }
+        }
+
+        // Mode Switching
+        function switchMode(mode) {
+            currentMode = mode;
+
+            // Update mode buttons
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Show/hide sections
+            const authSection = document.getElementById('authSection');
+            const chatArea = document.getElementById('chatArea');
+            const apiTestSection = document.getElementById('apiTestSection');
+
+            authSection.classList.remove('show');
+            chatArea.style.display = 'flex';
+            apiTestSection.classList.remove('show');
+
+            if (mode === 'auth') {
+                authSection.classList.add('show');
+                updateAuthUI();
+            } else if (mode === 'api') {
+                chatArea.style.display = 'none';
+                apiTestSection.classList.add('show');
+            }
+
+            updateUIBasedOnServices();
+            showNotification(`Switched to ${mode} mode`, 'success');
+        }
+
+        // Authentication Functions
+        function updateAuthUI() {
+            const authStatus = document.getElementById('authStatus');
+
+            if (authToken && currentUser) {
+                authStatus.innerHTML = `<span style="color: #28a745;">✅ Logged in as ${currentUser.username}</span>`;
+            } else {
+                authStatus.innerHTML = 'Ready for registration or login';
+            }
+        }
+
+        async function register() {
+            if (!isBackendOnline) {
+                showNotification('Backend service is offline', 'error');
+                return;
+            }
+
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!username || !email || !password) {
+                showNotification('Please fill all fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${backendUrl}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showNotification('Registration successful! Please login.', 'success');
+                    document.getElementById('username').value = '';
+                    document.getElementById('email').value = '';
+                    document.getElementById('password').value = '';
+                } else {
+                    showNotification(data.error || 'Registration failed', 'error');
+                }
+            } catch (error) {
+                showNotification('Registration failed: ' + error.message, 'error');
+            }
+        }
+
+        async function login() {
+            if (!isBackendOnline) {
+                showNotification('Backend service is offline', 'error');
+                return;
+            }
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showNotification('Please enter email and password', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${backendUrl}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    authToken = data.token;
+                    currentUser = data.user;
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+                    document.getElementById('email').value = '';
+                    document.getElementById('password').value = '';
+
+                    updateAuthUI();
+                    updateUIBasedOnServices();
+                    addMessage('system', `Welcome ${currentUser.username}! You can now chat with full features.`);
+                    showNotification('Login successful!', 'success');
+                } else {
+                    showNotification(data.error || 'Login failed', 'error');
+                }
+            } catch (error) {
+                showNotification('Login failed: ' + error.message, 'error');
+            }
+        }
+
+        function logout() {
+            authToken = null;
+            currentUser = null;
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            updateAuthUI();
+            updateUIBasedOnServices();
+            addMessage('system', 'You have been logged out.');
+            showNotification('Logged out successfully', 'success');
+        }
+
+        // Chat Functions
+        async function sendMessage(event) {
+            event.preventDefault();
+
+            const messageInput = document.getElementByI

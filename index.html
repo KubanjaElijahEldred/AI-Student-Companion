@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Student Companion - Web Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .portal-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .portal-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .portal-header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .portal-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .status-bar {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+
+        .status-online {
+            background: #28a745;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .portal-content {
+            padding: 40px;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .service-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .service-card:hover {
+            border-color: #4f46e5;
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(79, 70, 229, 0.1);
+        }
+
+        .service-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .service-card p {
+            color: #6c757d;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .service-card .features {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+
+        .service-card .features li {
+            color: #4f46e5;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .service-card .features li::before {
+            content: "✓";
+            background: #4f46e5;
+            color: white;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .action-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .quick-access {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .quick-access h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .quick-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .quick-button {
+            background: white;
+            color: #4f46e5;
+            border: 2px solid #4f46e5;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .quick-button:hover {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .system-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .system-info h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #4f46e5;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #4f46e5;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #2d3748;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+
+        .notification {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .notification.error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .notification.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="portal-container">
+        <div class="portal-header">
+            <h1>🤖 AI Student Companion</h1>
+            <p>Your Personal Study Assistant - Web Portal</p>
+            <div class="status-bar">
+                <div class="status-item">
+                    <span class="status-dot" id="aiEngineStatus"></span>
+                    <span>AI Engine</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot" id="backendStatus"></span>
+                    <span>Backend Server</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot status-online"></span>
+                    <span>Web Portal</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="portal-content">
+            <div id="notification" class="notification"></div>
+
+            <div class="quick-access">
+                <h2>🚀 Quick Access</h2>
+                <div class="quick-buttons">
+                    <button class="quick-button" onclick="openDirectChat()">💬 Direct Chat</button>
+                    <button class="quick-button" onclick="openFullApp()">🎓 Full Application</button>
+                    <button class="quick-button" onclick="testServices()">🧪 Test Services</button>
+                    <button class="quick-button" onclick="viewDocs()">📚 Documentation</button>
+                </div>
+            </div>
+
+            <div class="services-grid">
+                <div class="service-card" onclick="openDirectChat()">
+                    <h3>💬 Direct Chat Interface</h3>
+                    <p>Chat directly with the AI without needing to register. Perfect for quick questions and testing.</p>
+                    <ul class="features">
+                        <li>No registration required</li>
+                        <li>Instant AI responses</li>
+                        <li>Subject-specific help</li>
+                        <li>Clean, modern interface</li>
+                    </ul>
+                    <button class="action-button" id="directChatBtn">Open Direct Chat</button>
+                </div>
+
+                <div class="service-card" onclick="openFullApp()">
+                    <h3>🎓 Full Application</h3>
+                    <p>Complete chatbot experience with user accounts, chat history, and advanced features.</p>
+                    <ul class="features">
+                        <li>User registration & login</li>
+                        <li>Chat history storage</li>
+                        <li>Multiple conversations</li>
+                        <li>Personalized experience</li>
+                    </ul>
+                    <button class="action-button" id="fullAppBtn">Launch Full App</button>
+                </div>
+
+                <div class="service-card" onclick="openAPITests()">
+                    <h3>🔧 API Testing</h3>
+                    <p>Test and explore the backend APIs directly in your browser. Perfect for developers.</p>
+                    <ul class="features">
+                        <li>Test AI Engine responses</li>
+                        <li>Authentication testing</li>
+                        <li>Service health checks</li>
+                        <li>API documentation</li>
+                    </ul>
+                    <button class="action-button" id="apiTestBtn">Open API Tester</button>
+                </div>
+
+                <div class="service-card" onclick="openDemoMode()">
+                    <h3>🎯 Demo Mode</h3>
+                    <p>Experience all features without database setup. Perfect for demonstrations and testing.</p>
+                    <ul class="features">
+                        <li>No database required</li>
+                        <li>In-memory storage</li>
+                        <li>Full feature preview</li>
+                        <li>Easy setup</li>
+                    </ul>
+                    <button class="action-button" id="demoBtn">Start Demo</button>
+                </div>
+            </div>
+
+            <div class="system-info">
+                <h3>📊 System Information</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">AI Engine</div>
+                        <div class="info-value" id="aiEngineInfo">Checking...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Backend Server</div>
+                        <div class="info-value" id="backendInfo">Checking...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Mode</div>
+                        <div class="info-value">Development</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Version</div>
+                        <div class="info-value">1.0.0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Service URLs
+        const AI_ENGINE_URL = 'http://localhost:3001';
+        const BACKEND_URL = 'http://localhost:5001';
+        const DEMO_BACKEND_URL = 'http://localhost:5000';
+
+        // Initialize portal
+        document.addEventListener('DOMContentLoaded', function() {
+            checkServices();
+            setInterval(checkServices, 10000); // Check every 10 seconds
+        });
+
+        // Check service status
+        async function checkServices() {
+            await checkAIEngine();
+            await checkBackend();
+        }
+
+        async function checkAIEngine() {
+            const statusDot = document.getElementById('aiEngineStatus');
+            const infoDiv = document.getElementById('aiEngineInfo');
+
+            try {
+                const response = await fetch(`${AI_ENGINE_URL}/health`, { timeout: 3000 });
+                if (response.ok) {
+                    statusDot.classList.add('status-online');
+                    infoDiv.textContent = 'Running on port 3001 ✅';
+                    updateButtonStates(true, 'ai');
+                } else {
+                    throw new Error('Health check failed');
+                }
+            } catch (error) {
+                statusDot.classList.remove('status-online');
+                infoDiv.textContent = 'Not running ❌';
+                updateButtonStates(false, 'ai');
+            }
+        }
+
+        async function checkBackend() {
+            const statusDot = document.getElementById('backendStatus');
+            const infoDiv = document.getElementById('backendInfo');
+
+            // Try demo backend first, then regular backend
+            let backendRunning = false;
+            let backendPort = '';
+
+            try {
+                let response = await fetch(`${BACKEND_URL}/api/health`, { timeout: 3000 });
+                if (response.ok) {
+                    backendRunning = true;
+                    backendPort = '5001 (Demo)';
+                }
+            } catch (error) {
+                try {
+                    let response = await fetch(`${DEMO_BACKEND_URL}/api/health`, { timeout: 3000 });
+                    if (response.ok) {
+                        backendRunning = true;
+                        backendPort = '5000 (Standard)';
+                    }
+                } catch (error2) {
+                    // Both failed
+                }
+            }
+
+            if (backendRunning) {
+                statusDot.classList.add('status-online');
+                infoDiv.textContent = `Running on port ${backendPort} ✅`;
+                updateButtonStates(true, 'backend');
+            } else {
+                statusDot.classList.remove('status-online');
+                infoDiv.textContent = 'Not running ❌';
+                updateButtonStates(false, 'backend');
+            }
+        }
+
+        function updateButtonStates(isOnline, service) {
+            const directChatBtn = document.getElementById('directChatBtn');
+            const fullAppBtn = document.getElementById('fullAppBtn');
+            const apiTestBtn = document.getElementById('apiTestBtn');
+            const demoBtn = document.getElementById('demoBtn');
+
+            if (service === 'ai') {
+                directChatBtn.disabled = !isOnline;
+                apiTestBtn.disabled = !isOnline;
+            }
+
+            if (service === 'backend') {
+                fullAppBtn.disabled = !isOnline;
+                demoBtn.disabled = !isOnline;
+            }
+        }
+
+        // Navigation functions
+        function openDirectChat() {
+            window.open('test-chat.html', '_blank');
+        }
+
+        function openFullApp() {
+            window.open('frontend/demo.html', '_blank');
+        }
+
+        function openAPITests() {
+            showNotification('Opening API test interface...', 'success');
+            setTimeout(() => {
+                window.open('api-test.html', '_blank');
+            }, 500);
+        }
+
+        function openDemoMode() {
+            window.open('frontend/demo.html', '_blank');
+        }
+
+        function viewDocs() {
+            showNotification('Opening documentation...', 'success');
+            setTimeout(() => {
+                window.open('README.md', '_blank');
+            }, 500);
+        }
+
+        async function testServices() {
+            showNotification('Testing all services...', 'success');
+
+            try {
+                // Test AI Engine
+                const aiResponse = await fetch(`${AI_ENGINE_URL}/api/respond`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: 'Test message' })
+                });
+
+                if (aiResponse.ok) {
+                    const aiData = await aiResponse.json();
+                    showNotification(`✅ AI Engine test successful: "${aiData.reply}"`, 'success');
+                } else {
+                    throw new Error('AI Engine test failed');
+                }
+
+            } catch (error) {
+                showNotification(`❌ Service test failed: ${error.message}`, 'error');
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        // Auto-open direct chat if services are ready
+        setTimeout(() => {
+            const aiOnline = document.getElementById('aiEngineStatus').classList.contains('status-online');
+            if (aiOnline) {
+                showNotification('🎉 AI Engine is ready! Click "Direct Chat" to start chatting.', 'success');
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

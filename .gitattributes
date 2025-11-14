@@ -1,11 +1,29 @@
-# Exclude HTML from language detection completely
+# Language detection configuration
+# Exclude documentation and non-source files from language statistics
 *.html linguist-documentation
 *.htm linguist-documentation
 *.xhtml linguist-documentation
-*.js linguist-detectable=true
-*.java linguist-detectable=true
 *.md linguist-documentation
+*.txt linguist-documentation
 *.json linguist-vendored
+*.xml linguist-documentation
+*.yml linguist-documentation
+*.yaml linguist-documentation
+*.properties linguist-documentation
+*.gradle linguist-documentation
+*.mdx linguist-documentation
+*.sh linguist-documentation
+*.bat linguist-documentation
+*.cmd linguist-documentation
+*.gitattributes linguist-documentation
+*.gitignore linguist-documentation
+*.editorconfig linguist-documentation
+
+# Ensure JavaScript is detected but with lower weight
+*.js linguist-detectable=true
+
+# Emphasize Java files
+*.java linguist-language=Java
 
 # Force LF line endings for all text files
 * text=auto eol=lf

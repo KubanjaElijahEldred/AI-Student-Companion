@@ -1,0 +1,31 @@
+# Exclude HTML from language detection completely
+*.html linguist-documentation
+*.htm linguist-documentation
+*.xhtml linguist-documentation
+*.js linguist-detectable=true
+*.java linguist-detectable=true
+*.md linguist-documentation
+*.json linguist-vendored
+
+# Force LF line endings for all text files
+* text=auto eol=lf
+
+# Exclude common files from language stats
+package-lock.json linguist-vendored
+yarn.lock linguist-vendored
+*.min.js linguist-vendored
+*.min.css linguist-vendored
+*.svg linguist-documentation
+*.png linguist-documentation
+*.jpg linguist-documentation
+*.jpeg linguist-documentation
+*.gif linguist-documentation
+*.ico linguist-documentation
+*.pdf linguist-documentation
+*.zip linguist-vendored
+*.gz linguist-vendored
+
+# Mark all HTML files as documentation
+**/*.html linguist-documentation
+**/*.htm linguist-documentation
+**/*.xhtml linguist-documentation

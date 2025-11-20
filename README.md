@@ -87,3 +87,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Ollama](https://ollama.ai/) for the powerful AI models
 - All contributors who have helped shape this project
 A smart AI assistant for students
+# AI-Student-Companion

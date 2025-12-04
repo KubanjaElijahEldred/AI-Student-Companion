@@ -1,20 +1,55 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import connectDB from "./config/db.js";
+import db from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 
 dotenv.config();
-connectDB();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/chat", chatRoutes);
+// Initialize database and start server
+const startServer = async () => {
+  try {
+    // Connect to in-memory database
+    await db.connect();
+    
+    // Routes
+    app.use("/api/auth", authRoutes);
+    app.use("/api/chat", chatRoutes);
+    
+    // Simple health check endpoint
+    app.get("/health", (req, res) => {
+      res.status(200).json({ status: "ok", database: "in-memory" });
+    });
+    
+    const PORT = process.env.PORT || 5003;
+    const server = app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🔗 http://localhost:${PORT}`);
+    });
+    
+    // Handle server shutdown
+    const gracefulShutdown = async () => {
+      console.log("\n🛑 Shutting down server...");
+      server.close(async () => {
+        console.log("✅ Server closed");
+        process.exit(0);
+      });
+    };
+    
+    // Handle termination signals
+    process.on('SIGTERM', gracefulShutdown);
+    process.on('SIGINT', gracefulShutdown);
+    
+  } catch (error) {
+    console.error("❌ Failed to start server:", error);
+    process.exit(1);
+  }
+};
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// Start the server
+startServer();

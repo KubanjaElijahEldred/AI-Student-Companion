@@ -2,14 +2,70 @@ const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const axios = require('axios');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const cors = require('cors');
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = 'uploads/';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const filetypes = /jpeg|jpg|png|gif/;
+    const mimetype = filetypes.test(file.mimetype);
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    }
+    cb(new Error('Only image files are allowed!'));
+  }
+}).single('image');
 
 const app = express();
 const httpServer = createServer(app);
+
+// Enable CORS for all routes
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Serve static files from the frontend directory
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
+
+// Handle root URL
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+});
+
+// Create Socket.IO server with improved configuration
 const io = new Server(httpServer, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
+    origin: '*',
+    methods: ['GET', 'POST'],
+    transports: ['websocket', 'polling'],
+    credentials: true
+  },
+  allowEIO3: true,
+  pingTimeout: 30000, // 30 seconds
+  pingInterval: 5000,  // 5 seconds
+  maxHttpBufferSize: 10e6 // 10MB max upload size
 });
 
 // Ollama API configuration
@@ -19,45 +75,175 @@ const MODEL = 'llama3.2:1b';
 // In-memory store for demo purposes
 const sessions = new Map();
 
-// WebSocket connection
+// Serve uploaded files statically
+app.use('/uploads', express.static('uploads'));
+
+// Handle image uploads
+app.post('/api/upload', (req, res) => {
+  upload(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    res.json({ 
+      success: true, 
+      filePath: `/uploads/${req.file.filename}`,
+      originalName: req.file.originalname
+    });
+  });
+});
+
+// Track active connections
+const activeConnections = new Map();
+
+// Handle WebSocket connections
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
   
   // Initialize session
-  sessions.set(socket.id, {
-    history: []
+  const session = {
+    id: socket.id,
+    history: [],
+    isTyping: false,
+    lastActivity: Date.now()
+  };
+  
+  sessions.set(socket.id, session);
+  activeConnections.set(socket.id, socket);
+  
+  // Send initial connection confirmation
+  socket.emit('connected', { 
+    sessionId: socket.id,
+    timestamp: new Date().toISOString()
   });
 
   // Handle incoming messages
-  socket.on('message', async (data) => {
+  socket.on('message', async (data, ack) => {
     try {
+      const { message, messageId, type = 'text' } = data;
       const session = sessions.get(socket.id);
-      const { message } = data;
+      
+      if (!session) {
+        throw new Error('Session not found');
+      }
+      
+      // Update last activity
+      session.lastActivity = Date.now();
+      
+      // Acknowledge message receipt immediately
+      if (typeof ack === 'function') {
+        ack({ status: 'received', messageId });
+      }
+      
+      // Update typing state
+      socket.emit('typing', { isTyping: true });
       
       // Add user message to history
-      session.history.push({ role: 'user', content: message });
+      const userMessage = {
+        role: 'user',
+        content: message,
+        type,
+        timestamp: new Date().toISOString(),
+        messageId
+      };
       
-      // Generate response using Ollama
-      const response = await generateResponse(session.history);
+      if (type === 'image' && data.imageUrl) {
+        userMessage.imageUrl = data.imageUrl;
+      }
+      
+      session.history.push(userMessage);
+      
+      // Process message based on type
+      let response;
+      if (type === 'image' && data.imageUrl) {
+        // Handle image message
+        response = await generateResponse([
+          ...session.history,
+          { 
+            role: 'user', 
+            content: message || 'What is in this image?',
+            images: [data.imageUrl],
+            type: 'image'
+          }
+        ]);
+      } else {
+        // Handle text message
+        response = await generateResponse(session.history);
+      }
       
       // Add AI response to history
-      session.history.push({ role: 'assistant', content: response });
+      const aiResponse = {
+        role: 'assistant',
+        content: response,
+        timestamp: new Date().toISOString(),
+        inResponseTo: messageId
+      };
+      
+      session.history.push(aiResponse);
       
       // Send response back to client
-      socket.emit('response', { message: response });
+      socket.emit('response', {
+        type: 'text',
+        content: response,
+        responseId: `res-${Date.now()}`,
+        inResponseTo: messageId
+      });
       
     } catch (error) {
       console.error('Error processing message:', error);
-      socket.emit('error', { message: 'Error processing your request' });
+      socket.emit('error', { 
+        error: 'Error processing your request',
+        messageId: data?.messageId,
+        details: error.message
+      });
+    } finally {
+      // Always ensure typing indicator is turned off
+      socket.emit('typing', { isTyping: false });
     }
   });
-
+  
+  // Handle typing indicator
+  socket.on('typing', (data) => {
+    const session = sessions.get(socket.id);
+    if (session) {
+      session.isTyping = data.isTyping;
+      // Broadcast to other users in the same room if needed
+      // socket.to(roomId).emit('user-typing', { userId: socket.id, isTyping: data.isTyping });
+    }
+  });
+  
   // Handle disconnection
-  socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
+  socket.on('disconnect', (reason) => {
+    console.log(`Client disconnected: ${socket.id}, reason: ${reason}`);
     sessions.delete(socket.id);
+    activeConnections.delete(socket.id);
+  });
+  
+  // Handle errors
+  socket.on('error', (error) => {
+    console.error('Socket error:', error);
   });
 });
+
+// Clean up inactive sessions
+setInterval(() => {
+  const now = Date.now();
+  const timeout = 30 * 60 * 1000; // 30 minutes
+  
+  for (const [id, session] of sessions.entries()) {
+    if (now - session.lastActivity > timeout) {
+      console.log(`Cleaning up inactive session: ${id}`);
+      const socket = activeConnections.get(id);
+      if (socket) {
+        socket.disconnect(true);
+      }
+      sessions.delete(id);
+      activeConnections.delete(id);
+    }
+  }
+}, 5 * 60 * 1000); // Check every 5 minutes
 
 // Generate response using Ollama API
 async function generateResponse(history) {

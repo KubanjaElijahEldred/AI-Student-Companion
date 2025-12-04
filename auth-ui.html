@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mr. Elijah - AI Student Companion</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
 <body>
     <div id="app"></div>
@@ -315,7 +315,7 @@
                 };
 
                 const children = [];
-                if (icon) children.push(this.createElement('i', { className: icon, style: { marginRight: '8px' } }));
+                if (icon) children.push(this.createElement('i', { 'data-lucide': icon, style: { marginRight: '8px' } }));
                 if (text) children.push(text);
 
                 return this.createElement('button', {
@@ -499,7 +499,7 @@
                 // Theme toggle
                 const themeToggle = UIBuilder.button('', () => this.theme.toggle(), {
                     variant: 'secondary',
-                    icon: this.theme.isDark ? 'fas fa-sun' : 'fas fa-moon'
+                    icon: this.theme.isDark ? 'sun' : 'moon'
                 });
                 themeToggle.style.position = 'absolute';
                 themeToggle.style.top = '1rem';
@@ -759,7 +759,7 @@
                     this.showAuthScreen();
                 }, {
                     variant: 'secondary',
-                    icon: 'fas fa-sign-out-alt'
+                    icon: 'log-out'
                 });
 
                 sidebar.appendChild(userProfile);
@@ -1096,21 +1096,15 @@
                 const loadingMessage = this.addLoadingMessage();
 
                 try {
-                    // Add timeout to prevent freezing
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
                     const response = await fetch(`${this.API}/api/respond`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             message: message,
-                            sessionId: this.auth.currentUser.id
-                        }),
-                        signal: controller.signal
+                            userId: this.auth.currentUser?.id || 'anonymous',
+                            sessionId: this.auth.currentUser?.id || 'auth-session'
+                        })
                     });
-
-                    clearTimeout(timeoutId);
                     
                     // Remove loading message
                     if (loadingMessage && loadingMessage.parentNode) {
@@ -1136,6 +1130,8 @@
                         this.addMessage('ai', '⏰ Request timed out. The AI service might be slow or unavailable. Please try again.');
                     } else if (error.message.includes('Failed to fetch')) {
                         this.addMessage('ai', '🔌 Cannot connect to AI service. Please make sure the services are running by using the LAUNCH.bat file.');
+                    } else if (error.message.includes('JSON')) {
+                        this.addMessage('ai', '🔧 AI service is having technical issues. Please try using the Advanced Dashboard instead.');
                     } else {
                         this.addMessage('ai', `❌ Error: ${error.message}. Please check if the AI services are running.`);
                     }
@@ -1212,6 +1208,10 @@
         // Initialize the application
         document.addEventListener('DOMContentLoaded', () => {
             new AIStudentCompanion();
+            // Initialize Lucide icons
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                lucide.createIcons();
+            }
         });
     </script>
 </body>

@@ -4,8 +4,8 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
 // Import routes
-import authRoutes from './routes/auth.js';
-import chatRoutes from './routes/chat.js';
+import authRoutes from './routes/authRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
 import studyNoteRoutes from './routes/studyNoteRoutes.js';
 import flashcardRoutes from './routes/flashcardRoutes.js';
 import studySessionRoutes from './routes/studySessionRoutes.js';

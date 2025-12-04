@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Student Companion - Advanced Learning Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+    <!-- Header -->
+    <header class="glass-effect sticky top-0 z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i data-lucide="graduation-cap" class="w-8 h-8"></i>
+                <h1 class="text-2xl font-bold">AI Student Companion</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="zap" class="w-5 h-5 text-yellow-400"></i>
+                    <span id="userLevel" class="font-semibold">Level 1</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="trophy" class="w-5 h-5 text-yellow-400"></i>
+                    <span id="userXP" class="font-semibold">0 XP</span>
+                </div>
+                <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition">
+                    <i data-lucide="log-out" class="w-4 h-4 inline mr-2"></i>Logout
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto p-6">
+        <!-- Dashboard Stats -->
+        <div id="dashboardTab" class="tab-content active animate-slide-in">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="glass-effect rounded-xl p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <i data-lucide="book-open" class="w-8 h-8 text-blue-400"></i>
+                        <span class="text-2xl font-bold" id="notesCount">0</span>
+                    </div>
+                    <h3 class="text-lg font-semibold">Study Notes</h3>
+                    <p class="text-sm opacity-80">Total notes created</p>
+                </div>
+                
+                <div class="glass-effect rounded-xl p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <i data-lucide="layers" class="w-8 h-8 text-green-400"></i>
+                        <span class="text-2xl font-bold" id="flashcardsCount">0</span>
+                    </div>
+                    <h3 class="text-lg font-semibold">Flashcards</h3>
+                    
+                    <p class="text-sm opacity-80">Cards to review</p>
+                </div>
+                
+                <div class="glass-effect rounded-xl p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <i data-lucide="clock" class="w-8 h-8 text-purple-400"></i>
+                        <span class="text-2xl font-bold" id="studyTime">0h</span>
+                    </div>
+                    <h3 class="text-lg font-semibold">Study Time</h3>
+                    <p class="text-sm opacity-80">This week</p>
+                </div>
+                
+                <div class="glass-effect rounded-xl p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <i data-lucide="target" class="w-8 h-8 text-yellow-400"></i>
+                        <span class="text-2xl font-bold" id="streakCount">0</span>
+                    </div>
+                    <h3 class="text-lg font-semibold">Study Streak</h3>
+                    <p class="text-sm opacity-80">Days in a row</p>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="glass-effect rounded-xl p-6">
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <i data-lucide="activity" class="w-6 h-6 mr-2"></i>
+                        Recent Activity
+                    </h3>
+                    <div id="recentActivity" class="space-y-3">
+                        <!-- Activity items will be added here -->
+                    </div>
+                </div>
+                
+                <div class="glass-effect rounded-xl p-6">
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <i data-lucide="award" class="w-6 h-6 mr-2"></i>
+                        Recent Achievements
+                    </h3>
+                    <div id="recentAchievements" class="space-y-3">
+                        <!-- Achievement items will be added here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Overview -->
+            <div class="glass-effect rounded-xl p-6">
+                <h3 class="text-xl font-bold mb-6 flex items-center">
+                    <i data-lucide="trending-up" class="w-6 h-6 mr-2"></i>
+                    Subject Progress
+                </h3>
+                <div id="subjectProgress" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Progress bars will be added here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="glass-effect rounded-xl p-2 mb-6 flex flex-wrap gap-2">
+            <button onclick="switchTab('dashboard')" class="tab-btn px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition" data-tab="dashboard">
+                <i data-lucide="layout-dashboard" class="w-4 h-4 inline mr-2"></i>Dashboard
+            </button>
+            <button onclick="switchTab('notes')" class="tab-btn px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition" data-tab="notes">
+                <i data-lucide="book-open" class="w-4 h-4 inline mr-2"></i>Notes
+            </button>
+            <button onclick="switchTab('flashcards')" class="tab-btn px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition" data-tab="flashcards">
+                <i data-lucide="layers" class="w-4 h-4 inline mr-2"></i>Flashcards
+            </button>
+            <button onclick="switchTab('sessions')" class="tab-btn px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition" data-tab="sessions">
+                <i data-lucide="clock" class="w-4 h-4 inline mr-2"></i>Sessions
+            </button>
+            <button onclick="switchTab('quizzes')" class="tab-btn px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition" data-tab="quizzes">
+                <i data-lucide="help-circle" class="w-4 h-4 inline mr-2"></i>Quizzes
+            </button>
+            <button onclick="switchTab('ai-chat')" class="tab-btn px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition" data-tab="ai-chat">
+                <i data-lucide="message-circle" class="w-4 h-4 inline mr-2"></i>AI Chat
+            </button>
+            <button onclick="switchTab('leaderboard')" class="tab-btn px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition" data-tab="leaderboard">
+                <i data-lucide="trophy" class="w-4 h-4 inline mr-2"></i>Leaderboard
+            </button>
+        </div>
+
+        <!-- Study Notes Tab -->
+        <div id="notesTab" class="tab-content">
+            <div class="glass-effect rounded-xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold flex items-center">
+                        <i data-lucide="book-open" class="w-6 h-6 mr-2"></i>
+                        Study Notes
+                    </h2>
+                    <button onclick="openNoteModal()" class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg transition">
+                        <i data-lucide="plus" class="w-4 h-4 inline mr-2"></i>New Note
+                    </button>
+                </div>
+                
+                <!-- Search and Filter -->
+                <div class="flex flex-col md:flex-row gap-4 mb-6">
+                    <input type="text" id="noteSearch" placeholder="Search notes..." class="flex-1 bg-white bg-opacity-20 rounded-lg px-4 py-2 placeholder-gray-300">
+                    <select id="noteSubjectFilter" class="bg-white bg-opacity-20 rounded-lg px-4 py-2">
+                        <option value="">All Subjects</option>
+                        <option value="mathematics">Mathematics</option>
+                        <option value="physics">Physics</option>
+                        <option value="chemistry">Chemistry</option>
+                        <option value="biology">Biology</option>
+                        <option value="history">History</option>
+                        <option value="geography">Geography</option>
+                        <option value="literature">Literature</option>
+                        <option value="computer_science">Computer Science</option>
+                    </select>
+                </div>
+                
+                <div id="notesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Notes will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Flashcards Tab -->
+        <div id="flashcardsTab" class="tab-content">
+            <div class="glass-effect rounded-xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold flex items-center">
+                        <i data-lucide="layers" class="w-6 h-6 mr-2"></i>
+                        Spaced Repetition Flashcards
+                    </h2>
+                    <div class="flex gap-2">
+                        <button onclick="studyDueFlashcards()" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition">
+                            <i data-lucide="play" class="w-4 h-4 inline mr-2"></i>Study Due Cards
+                        </button>
+                        <button onclick="openFlashcardModal()" class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg transition">
+                            <i data-lucide="plus" class="w-4 h-4 inline mr-2"></i>New Card
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Flashcard Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white bg-opacity-10 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold" id="totalCards">0</div>
+                        <div class="text-sm opacity-80">Total Cards</div>
+                    </div>
+                    <div class="bg-white bg-opacity-10 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-green-400" id="dueCards">0</div>
+                        <div class="text-sm opacity-80">Due for Review</div>
+                    </div>
+                    <div class="bg-white bg-opacity-10 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-blue-400" id="correctRate">0%</div>
+                        <div class="text-sm opacity-80">Correct Rate</div>
+                    </div>
+                    <div class="bg-white bg-opacity-10 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-purple-400" id="studiedToday">0</div>
+                        <div class="text-sm opacity-80">Studied Today</div>
+                    </div>
+                </div>
+                
+                <div id="flashcardsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Flashcards will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Study Sessions Tab -->
+        <div id="sessionsTab" class="tab-content">
+            <div class="glass-effect rounded-xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold flex items-center">
+                        <i data-lucide="clock" class="w-6 h-6 mr-2"></i>
+                        Study Sessions
+                    </h2>
+                    <button onclick="startNewSession()" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition">
+                        <i data-lucide="play" class="w-4 h-4 inline mr-2"></i>Start Session
+                    </button>
+                </div>
+                
+                <!-- Current Session -->
+                <div id="currentSession" class="hidden bg-green-500 bg-opacity-20 rounded-xl p-6 mb-6">
+                    <h3 class="text-xl font-bold mb-4">Current Study Session</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <div class="text-sm opacity-80">Subject</div>
+                            <div class="text-lg font-semibold" id="sessionSubject">-</div>
+                        </div>
+                        <div>
+                            <div class="text-sm opacity-80">Duration</div>
+                            <div class="text-lg font-semibold" id="sessionDuration">00:00:00</div>
+                        </div>
+                        <div>
+                            <div class="text-sm opacity-80">Productivity</div>
+                            <div class="text-lg font-semibold" id="sessionProductivity">-</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-4">
+                        <button onclick="pauseSession()" class="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded-lg transition">
+                            <i data-lucide="pause" class="w-4 h-4 inline mr-2"></i>Pause
+                        </button>
+                        <button onclick="endSession()" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition">
+                            <i data-lucide="stop" class="w-4 h-4 inline mr-2"></i>End Session
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="sessionsList" class="space-y-4">
+                    <!-- Sessions will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Quizzes Tab -->
+        <div id="quizzesTab" class="tab-content">
+            <div class="glass-effect rounded-xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold flex items-center">
+                        <i data-lucide="help-circle" class="w-6 h-6 mr-2"></i>
+                        Quizzes
+                    </h2>
+                    <div class="flex gap-2">
+                        <button onclick="generateAIQuiz()" class="bg-purple-500 hover:bg-purple-600 px-4 py-2 rounded-lg transition">
+                            <i data-lucide="sparkles" class="w-4 h-4 inline mr-2"></i>Generate AI Quiz
+                        </button>
+                        <button onclick="openQuizModal()" class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg transition">
+                            <i data-lucide="plus" class="w-4 h-4 inline mr-2"></i>Create Quiz
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="quizzesList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Quizzes will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Chat Tab -->
+        <div id="ai-chatTab" class="tab-content">
+            <div class="glass-effect rounded-xl p-6">
+                <h2 class="text-2xl font-bold mb-6 flex items-center">
+                    <i data-lucide="message-circle" class="w-6 h-6 mr-2"></i>
+                    AI Study Assistant
+                </h2>
+                
+                <div id="chatMessages" class="bg-black bg-opacity-30 rounded-lg p-4 h-96 overflow-y-auto mb-4">
+                    <!-- Chat messages will appear here -->
+                </div>
+                
+                <div class="flex gap-2">
+                    <input type="text" id="chatInput" placeholder="Ask me anything about your studies..." class="flex-1 bg-white bg-opacity-20 rounded-lg px-4 py-2 placeholder-gray-300">
+                    <button onclick="sendMessage()" class="bg-blue-500 hover:bg-blue-600 px-6 py-2 rounded-lg transition">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard Tab -->
+        <div id="leaderboardTab" class="tab-content">
+            <div class="glass-effect rounded-xl p-6">
+                <h2 class="text-2xl font-bold mb-6 flex items-center">
+                    <i data-lucide="trophy" class="w-6 h-6 mr-2"></i>
+                    Leaderboard
+                </h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2">
+                        <div id="leaderboardList" class="space-y-3">
+                            <!-- Leaderboard entries will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">Your Rank</h3>
+                        <div class="bg-white bg-opacity-20 rounded-xl p-6 text-center">
+                            <div class="text-4xl font-bold mb-2" id="userRank">#-</div>
+                            <div class="text-lg opacity-80" id="userTotalXP">0 XP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <!-- Note Modal -->
+    <div id="noteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="glass-effect rounded-xl p-6 w-full max-w-2xl mx-4">
+            <h3 class="text-xl font-bold mb-4">Create Study Note</h3>
+            <form id="noteForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <input type="text" id="noteTitle" placeholder="Note Title" required class="bg-white bg-opacity-20 rounded-lg px-4 py-2 placeholder-gray-300">
+                    <select id="noteSubject" class="bg-white bg-opacity-20 rounded-lg px-4 py-2">
+                        <option value="mathematics">Mathematics</option>
+                        <option value="physics">Physics</option>
+                        <option value="chemistry">Chemistry</option>
+                        <option value="biology">Biology</option>
+                        <option value="history">History</option>
+                        <option value="geography">Geography</option>
+                        <option value="literature">Literature</option>
+                        <option value="computer_science">Computer Science</option>
+                    </select>
+                </div>
+                <select id="noteImportance" class="bg-white bg-opacity-20 rounded-lg px-4 py-2 mb-4 w-full">
+                    <option value="low">Low Importance</option>
+                    <option value="medium" selected>Medium Importance</option>
+                    <option value="high">High Importance</option>
+                </select>
+                <input type="text" id="noteTags" placeholder="Tags (comma separated)" class="bg-white bg-opacity-20 rounded-lg px-4 py-2 mb-4 w-full placeholder-gray-300">
+                <textarea id="noteContent" placeholder="Note content" required rows="6" class="bg-white bg-opacity-20 rounded-lg px-4 py-2 w-full placeholder-gray-300"></textarea>
+                <div class="flex justify-end gap-2 mt-4">
+                    <button type="button" onclick="closeNoteModal()" class="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-lg transition">Cancel</button>
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg transition">Save Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Flashcard Modal -->
+    <div id="flashcardModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="glass-effect rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-xl font-bold mb-4">Create Flashcard</h3>
+            <form id="flashcardForm">
+                <input type="text" id="cardQuestion" placeholder="Question" required class="bg-white bg-opacity-20 rounded-lg px-4 py-2 mb-4 w-full placeholder-gray-300">
+                <textarea id="cardAnswer" placeholder="Answer" required rows="3" class="bg-white bg-opacity-20 rounded-lg px-4 py-2 mb-4 w-full placeholder-gray-300"></textarea>
+                <select id="cardSubject" class="bg-white bg-opacity-20 rounded-lg px-4 py-2 mb-4 w-full">
+                    <option value="mathematics">Mathematics</option>
+                    <option value="physics">Physics</option>
+                    <option value="chemistry">Chemistry</option>
+                    <option value="biology">Biology</option>
+                    <option value="history">History</option>
+                    <option value="geography">Geography</option>
+                    <option value="literature">Literature</option>
+                    <option value="computer_science">Computer Science</option>
+                </select>
+                <select id="cardDifficulty" class="bg-white bg-opacity-20 rounded-lg px-4 py-2 mb-4 w-full">
+                    <option value="easy">Easy</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+                <input type="text" id="cardDeck" placeholder="Deck name (optional)" class="bg-white bg-opacity-20 rounded-lg px-4 py-2 mb-4 w-full placeholder-gray-300">
+                <div class="flex justify-end gap-2 mt-4">
+                    <button type="button" onclick="closeFlashcardModal()" class="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-lg transition">Cancel</button>
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg transition">Create Card</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Study Session Modal -->
+    <div id="sessionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="glass-effect rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-xl font-bold mb-4">Start Study Session</h3>
+            <form id="sessionForm">
+                <select id="sessionSubjectSelect" required class="bg-white bg-opacity-20 rounded-lg px-4 py-2 mb-4 w-full">
+                    <option value="">Select Subject</option>
+                    <option value="mathematics">Mathematics</option>
+                    <option value="physics">Physics</option>
+                    <option value="chemistry">Chemistry</option>
+                    <option value="biology">Biology</option>
+                    <option value="history">History</option>
+                    <option value="geography">Geography</option>
+                    <option value="literature">Literature</option>
+                    <option value="computer_science">Computer Science</option>
+                </select>
+                <input type="text" id="sessionFocus" placeholder="What will you focus on?" required class="bg-white bg-opacity-20 rounded-lg px-4 py-2 mb-4 w-full placeholder-gray-300">
+                <textarea id="sessionGoals" placeholder="Study goals (one per line)" rows="3" class="bg-white bg-opacity-20 rounded-lg px-4 py-2 mb-4 w-full placeholder-gray-300"></textarea>
+                <div class="flex justify-end gap-2 mt-4">
+                    <button type="button" onclick="closeSessionModal()" class="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-lg transition">Cancel</button>
+                    <button type="submit" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition">Start Session</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Flashcard Study Modal -->
+    <div id="flashcardStudyModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="glass-effect rounded-xl p-8 w-full max-w-lg mx-4">
+            <div class="text-center mb-6">
+                <div class="text-sm opacity-80 mb-2">Progress</div>
+                <div class="w-full bg-white bg-opacity-20 rounded-full h-2">
+                    <div id="studyProgress" class="bg-green-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <div class="mt-2 text-sm" id="studyProgressText">0 / 0 cards</div>
+            </div>
+            
+            <div id="flashcardStudy" class="min-h-[200px] flex items-center justify-center mb-6">
+                <div class="text-center">
+                    <div id="cardQuestionText" class="text-xl font-semibold mb-4"></div>
+                    <div id="cardAnswerText" class="text-lg opacity-80 hidden"></div>
+                    <button id="showAnswerBtn" onclick="showCardAnswer()" class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg transition">
+                        Show Answer
+                    </button>
+                </div>
+            </div>
+            
+            <div id="cardDifficulty" class="hidden justify-center gap-2 mb-6">
+                <button onclick="rateCard(0)" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition">Again</button>
+                <button onclick="rateCard(1)" class="bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-lg transition">Hard</button>
+                <button onclick="rateCard(2)" class="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded-lg transition">Good</button>
+                <button onclick="rateCard(3)" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition">Easy</button>
+            </div>
+            
+            <div class="flex justify-end">
+                <button onclick="closeFlashcardStudy()" class="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-lg transition">End Study</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let authToken = localStorage.getItem('authToken');
+        let currentUser = null;
+        let currentSession = null;
+        let sessionTimer = null;
+        let studyCards = [];
+        let currentCardIndex = 0;
+
+        // API Base URLs
+        const BACKEND_URL = 'http://localhost:5001';
+        const AI_ENGINE_URL = 'http://localhost:3001';
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+            checkAuth();
+            loadDashboard();
+            setupEventListeners();
+        });
+
+        // Authentication
+        function checkAuth() {
+            if (!authToken) {
+                window.location.href = 'auth-ui.html';
+                return;
+            }
+            
+            // Verify token and get user info
+            fetch(`${BACKEND_URL}/api/auth/verify`, {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Invalid token');
+                return response.json();
+            })
+            .then(user => {
+                currentUser = user;
+                updateUserInfo();
+            })
+            .catch(error => {
+                console.error('Auth error:', error);
+                localStorage.removeItem('authToken');
+                window.location.href = 'auth-ui.html';
+            });
+        }
+
+        function updateUserInfo() {
+            if (currentUser) {
+                document.getElementById('userLevel').textContent = `Level ${currentUser.level || 1}`;
+                document.getElementById('userXP').textContent = `${currentUser.totalXP || 0} XP`;
+            }
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // Update button styles
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'bg-opacity-20');
+                if (btn.dataset.tab === tabName) {
+                    btn.classList.add('bg-white', 'bg-opacity-20');
+                }
+            });
+            
+            // Load tab-specific data
+            switch(tabName) {
+                case 'dashboard':
+                    loadDashboard();
+                    break;
+                case 'notes':
+                    loadNotes();
+                    break;
+                case 'flashcards':
+                    loadFlashcards();
+                    break;
+                case 'sessions':
+                    loadSessions();
+                    break;
+                case 'quizzes':
+                    loadQuizzes();
+                    break;
+                case 'leaderboard':
+                    loadLeaderboard();
+                    break;
+            }
+        }
+
+        // Dashboard
+        function loadDashboard() {
+            Promise.all([
+                fetch(`${BACKEND_URL}/api/progress/dashboard`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                }),
+                fetch(`${BACKEND_URL}/api/notes`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                }),
+                fetch(`${BACKEND_URL}/api/flashcards/stats`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                }),
+                fetch(`${BACKEND_URL}/api/sessions/stats`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                })
+            ])
+            .then(([dashboardRes, notesRes, flashcardsRes, sessionsRes]) => 
+                Promise.all([dashboardRes.json(), notesRes.json(), flashcardsRes.json(), sessionsRes.json()])
+            )
+            .then(([dashboard, notes, flashcards, sessions]) => {
+                // Update stats
+                document.getElementById('notesCount').textContent = notes.total || 0;
+                document.getElementById('flashcardsCount').textContent = flashcards.due || 0;
+                document.getElementById('studyTime').textContent = formatHours(sessions.weeklyTime || 0);
+                document.getElementById('streakCount').textContent = dashboard.streak || 0;
+                
+                // Load recent activity
+                loadRecentActivity();
+                
+                // Load achievements
+                loadAchievements();
+                
+                // Load subject progress
+                loadSubjectProgress();
+            })
+            .catch(error => console.error('Dashboard error:', error));
+        }
+
+        function loadRecentActivity() {
+            // This would fetch recent activities from the API
+            const activities = [
+                { type: 'note', title: 'Created note: "Calculus Basics"', time: '2 hours ago' },
+                { type: 'flashcard', title: 'Reviewed 10 flashcards', time: '3 hours ago' },
+                { type: 'session', title: 'Completed Physics study session', time: '5 hours ago' },
+                { type: 'quiz', title: 'Scored 85% on Chemistry Quiz', time: '1 day ago' }
+            ];
+            
+            const container = document.getElementById('recentActivity');
+            container.innerHTML = activities.map(activity => `
+                <div class="flex items-center justify-between p-3 bg-white bg-opacity-10 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <i data-lucide="${getActivityIcon(activity.type)}" class="w-5 h-5"></i>
+                        <span>${activity.title}</span>
+                    </div>
+                    <span class="text-sm opacity-60">${activity.time}</span>
+                </div>
+            `).join('');
+            
+            lucide.createIcons();
+        }
+
+        function loadAchievements() {
+            const achievements = [
+                { name: 'First Note', description: 'Created your first study note', icon: 'book-open', unlocked: true },
+                { name: 'Flashcard Master', description: 'Created 50 flashcards', icon: 'layers', unlocked: false },
+                { name: 'Study Streak', description: '7 days study streak', icon: 'flame', unlocked: true }
+            ];
+            
+            const container = document.getElementById('recentAchievements');
+            container.innerHTML = achievements.map(achievement => `
+                <div class="flex items-center space-x-3 p-3 bg-white bg-opacity-10 rounded-lg ${achievement.unlocked ? '' : 'opacity-50'}">
+                    <i data-lucide="${achievement.icon}" class="w-5 h-5 ${achievement.unlocked ? 'text-yellow-400' : 'text-gray-400'}"></i>
+                    <div>
+                        <div class="font-semibold">${achievement.name}</div>
+                        <div class="text-sm opacity-80">${achievement.description}</div>
+                    </div>
+                </div>
+            `).join('');
+            
+            lucide.createIcons();
+        }
+
+        function loadSubjectProgress() {
+            const subjects = [
+                { name: 'Mathematics', progress: 75, color: 'bg-blue-500' },
+                { name: 'Physics', progress: 60, color: 'bg-green-500' },
+                { name: 'Chemistry', progress: 45, color: 'bg-yellow-500' },
+                { name: 'Biology', progress: 80, color: 'bg-purple-500' },
+                { name: 'History', progress: 30, color: 'bg-red-500' },
+                { name: 'Computer Science', progress: 90, color: 'bg-indigo-500' }
+            ];
+            
+            const container = document.getElementById('subjectProgress');
+            container.innerHTML = subjects.map(subject => `
+                <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-semibold">${subject.name}</span>
+                        <span class="text-sm">${subject.progress}%</span>
+                    </div>
+                    <div class="w-full bg-white bg-opacity-20 rounded-full h-2">
+                        <div class="${subject.color} h-2 rounded-full transition-all duration-300" style="width: ${subject.progress}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Study Notes
+        function loadNotes() {
+            fetch(`${BACKEND_URL}/api/notes`, {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            })
+            .then(response => response.json())
+            .then(notes => {
+                const container = document.getElementById('notesList');
+                container.innerHTML = notes.map(note => `
+                    <div class="bg-white bg-opacity-10 rounded-lg p-4 card-hover cursor-pointer" onclick="viewNote('${note._id}')">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-semibold">${note.title}</h4>
+                            <span class="text-xs px-2 py-1 bg-${getImportanceColor(note.importance)}-500 rounded">${note.importance}</span>
+                        </div>
+                        <p class="text-sm opacity-80 mb-2 line-clamp-2">${note.content}</p>
+                        <div class="flex justify-between items-center text-xs opacity-60">
+                            <span>${note.subject}</span>
+                            <span>${new Date(note.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        ${note.tags.length > 0 ? `
+                            <div class="flex flex-wrap gap-1 mt-2">
+                                ${note.tags.map(tag => `<span class="text-xs px-2 py-1 bg-white bg-opacity-20 rounded">${tag}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+            })
+            .catch(error => console.error('Notes error:', error));
+        }
+
+        function openNoteModal() {
+            document.getElementById('noteModal').style.display = 'flex';
+        }
+
+        function closeNoteModal() {
+            document.getElementById('noteModal').style.display = 'none';
+            document.getElementById('noteForm').reset();
+        }
+
+        // Flashcards
+        function loadFlashcards() {
+            Promise.all([
+                fetch(`${BACKEND_URL}/api/flashcards`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                }),
+                fetch(`${BACKEND_URL}/api/flashcards/stats`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                })
+            ])
+            .then(([cardsRes, statsRes]) => Promise.all([cardsRes.json(), statsRes.json()]))
+            .then(([flashcards, stats]) => {
+                // Update stats
+                document.getElementById('totalCards').textContent = stats.total || 0;
+                document.getElementById('dueCards').textContent = stats.due || 0;
+                document.getElementById('correctRate').textContent = `${stats.correctRate || 0}%`;
+                document.getElementById('studiedToday').textContent = stats.studiedToday || 0;
+                
+                // Load flashcards
+                const container = document.getElementById('flashcardsList');
+                container.innerHTML = flashcards.map(card => `
+                    <div class="bg-white bg-opacity-10 rounded-lg p-4 card-hover">
+                        <div class="mb-2">
+                            <span class="text-xs px-2 py-1 bg-${getDifficultyColor(card.difficulty)}-500 rounded">${card.difficulty}</span>
+                            <span class="text-xs px-2 py-1 bg-white bg-opacity-20 rounded ml-1">${card.subject}</span>
+                        </div>
+                        <h4 class="font-semibold mb-2">${card.question}</h4>
+                        <p class="text-sm opacity-80 mb-2">${card.answer}</p>
+                        <div class="flex justify-between items-center text-xs opacity-60">
+                            <span>Next review: ${new Date(card.nextReview).toLocaleDateString()}</span>
+                            <span>Reviewed ${card.timesReviewed} times</span>
+                        </div>
+                    </div>
+                `).join('');
+            })
+            .catch(error => console.error('Flashcards error:', error));
+        }
+
+        function studyDueFlashcards() {
+            fetch(`${BACKEND_URL}/api/flashcards/due`, {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            })
+            .then(response => response.json())
+            .then(cards => {
+                if (cards.length === 0) {
+                    alert('No cards due for review!');
+                    return;
+                }
+                
+                studyCards = cards;
+                currentCardIndex = 0;
+                document.getElementById('flashcardStudyModal').style.display = 'flex';
+                showCurrentCard();
+            })
+            .catch(error => console.error('Study cards error:', error));
+        }
+
+        function showCurrentCard() {
+            if (currentCardIndex >= studyCards.length) {
+                alert('Study session complete!');
+                closeFlashcardStudy();
+                return;
+            }
+            
+            const card = studyCards[currentCardIndex];
+            document.getElementById('cardQuestionText').textContent = card.question;
+            document.getElementById('cardAnswerText').textContent = card.answer;
+            document.getElementById('cardAnswerText').classList.add('hidden');
+            document.getElementById('showAnswerBtn').classList.remove('hidden');
+            document.getElementById('cardDifficulty').classList.add('hidden');
+            
+            // Update progress
+            const progress = ((currentCardIndex + 1) / studyCards.length) * 100;
+            document.getElementById('studyProgress').style.width = `${progress}%`;
+            document.getElementById('studyProgressText').textContent = `${currentCardIndex + 1} / ${studyCards.length} cards`;
+        }
+
+        function showCardAnswer() {
+            document.getElementById('cardAnswerText').classList.remove('hidden');
+            document.getElementById('showAnswerBtn').classList.add('hidden');
+            document.getElementById('cardDifficulty').classList.remove('hidden');
+        }
+
+        function rateCard(quality) {
+            const card = studyCards[currentCardIndex];
+            
+            fetch(`${BACKEND_URL}/api/flashcards/${card._id}/review`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ quality })
+            })
+            .then(response => response.json())
+            .then(() => {
+                currentCardIndex++;
+                showCurrentCard();
+            })
+            .catch(error => console.error('Rate card error:', error));
+        }
+
+        function closeFlashcardStudy() {
+            document.getElementById('flashcardStudyModal').style.display = 'none';
+            studyCards = [];
+            currentCardIndex = 0;
+            loadFlashcards();
+        }
+
+        // Study Sessions
+        function loadSessions() {
+            fetch(`${BACKEND_URL}/api/sessions`, {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            })
+            .then(response => response.json())
+            .then(sessions => {
+                const container = document.getElementById('sessionsList');
+                container.innerHTML = sessions.map(session => `
+                    <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="font-semibold">${session.subject}</h4>
+                                <p class="text-sm opacity-80">${session.focus}</p>
+                            </div>
+                            <span class="text-xs px-2 py-1 bg-green-500 rounded">${session.status}</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="opacity-60">Duration:</span>
+                                <span class="ml-2">${formatDuration(session.duration)}</span>
+                            </div>
+                            <div>
+                                <span class="opacity-60">Productivity:</span>
+                                <span class="ml-2">${session.productivity}/10</span>
+                            </div>
+                        </div>
+                        <div class="text-xs opacity-60 mt-2">
+                            ${new Date(session.startTime).toLocaleString()}
+                        </div>
+                    </div>
+                `).join('');
+            })
+            .catch(error => console.error('Sessions error:', error));
+        }
+
+        function startNewSession() {
+            document.getElementById('sessionModal').style.display = 'flex';
+        }
+
+        function closeSessionModal() {
+            document.getElementById('sessionModal').style.display = 'none';
+            document.getElementById('sessionForm').reset();
+        }
+
+        // Quizzes
+        function loadQuizzes() {
+            fetch(`${BACKEND_URL}/api/quizzes`, {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            })
+            .then(response => response.json())
+            .then(quizzes => {
+                const container = document.getElementById('quizzesList');
+                container.innerHTML = quizzes.map(quiz => `
+                    <div class="bg-white bg-opacity-10 rounded-lg p-6 card-hover cursor-pointer" onclick="takeQuiz('${quiz._id}')">
+                        <div class="flex justify-between items-start mb-4">
+                            <h4 class="font-semibold text-lg">${quiz.title}</h4>
+                            <span class="text-xs px-2 py-1 bg-${getDifficultyColor(quiz.difficulty)}-500 rounded">${quiz.difficulty}</span>
+                        </div>
+                        <p class="text-sm opacity-80 mb-4">${quiz.description || 'Test your knowledge'}</p>
+                        <div class="flex justify-between items-center text-sm">
+                            <span>${quiz.questions.length} questions</span>
+                            <span>${quiz.subject}</span>
+                        </div>
+                    </div>
+                `).join('');
+            })
+            .catch(error => console.error('Quizzes error:', error));
+        }
+
+        function generateAIQuiz() {
+            const subject = prompt('Enter subject for AI-generated quiz:');
+            if (!subject) return;
+            
+            fetch(`${BACKEND_URL}/api/quizzes/generate`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ subject, topic: 'general', difficulty: 'medium', questionCount: 5 })
+            })
+            .then(response => response.json())
+            .then(quiz => {
+                alert('AI Quiz generated successfully!');
+                loadQuizzes();
+            })
+            .catch(error => console.error('Generate quiz error:', error));
+        }
+
+        // AI Chat
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            const messagesContainer = document.getElementById('chatMessages');
+            
+            // Add user message
+            messagesContainer.innerHTML += `
+                <div class="mb-4">
+                    <div class="bg-blue-500 bg-opacity-20 rounded-lg p-3 inline-block max-w-xs">
+                        ${message}
+                    </div>
+                    <div class="text-xs opacity-60 mt-1">You</div>
+                </div>
+            `;
+            
+            input.value = '';
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // Send to AI
+            fetch(`${AI_ENGINE_URL}/api/respond`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    message,
+                    userId: currentUser?.id || 'anonymous',
+                    sessionId: 'web-session'
+                })
+            })
+            .then(response => {
+                console.log('AI Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('AI Response data:', data);
+                // Add AI response
+                messagesContainer.innerHTML += `
+                    <div class="mb-4">
+                        <div class="bg-white bg-opacity-20 rounded-lg p-3 inline-block max-w-xs">
+                            ${data.response || 'Sorry, I could not process your request.'}
+                        </div>
+                        <div class="text-xs opacity-60 mt-1">AI Assistant</div>
+                    </div>
+                `;
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            })
+            .catch(error => {
+                console.error('Chat error:', error);
+                messagesContainer.innerHTML += `
+                    <div class="mb-4">
+                        <div class="bg-red-500 bg-opacity-20 rounded-lg p-3 inline-block max-w-xs">
+                            Sorry, I'm having trouble responding right now.
+                        </div>
+                        <div class="text-xs opacity-60 mt-1">AI Assistant</div>
+                    </div>
+                `;
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            });
+        }
+
+        // Leaderboard
+        function loadLeaderboard() {
+            fetch(`${BACKEND_URL}/api/progress/leaderboard`, {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            })
+            .then(response => response.json())
+            .then(leaderboard => {
+                const container = document.getElementById('leaderboardList');
+                container.innerHTML = leaderboard.map((user, index) => `
+                    <div class="flex items-center justify-between p-4 bg-white bg-opacity-10 rounded-lg ${user.isCurrentUser ? 'ring-2 ring-yellow-400' : ''}">
+                        <div class="flex items-center space-x-4">
+                            <div class="text-2xl font-bold ${index < 3 ? 'text-yellow-400' : ''}">
+                                ${index < 3 ? ['🥇', '🥈', '🥉'][index] : `#${index + 1}`}
+                            </div>
+                            <div>
+                                <div class="font-semibold">${user.username}</div>
+                                <div class="text-sm opacity-60">Level ${user.level}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold">${user.totalXP} XP</div>
+                            <div class="text-sm opacity-60">${user.streak} day streak</div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Update user rank
+                const userRank = leaderboard.findIndex(u => u.isCurrentUser);
+                if (userRank !== -1) {
+                    const user = leaderboard[userRank];
+                    document.getElementById('userRank').textContent = `#${userRank + 1}`;
+                    document.getElementById('userTotalXP').textContent = `${user.totalXP} XP`;
+                }
+            })
+            .catch(error => console.error('Leaderboard error:', error));
+        }
+
+        // Utility functions
+        function formatHours(minutes) {
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+        }
+
+        function formatDuration(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            if (hours > 0) {
+                return `${hours}h ${minutes}m`;
+            } else if (minutes > 0) {
+                return `${minutes}m ${secs}s`;
+            } else {
+                return `${secs}s`;
+            }
+        }
+
+        function getActivityIcon(type) {
+            const icons = {
+                note: 'book-open',
+                flashcard: 'layers',
+                session: 'clock',
+                quiz: 'help-circle'
+            };
+            return icons[type] || 'activity';
+        }
+
+        function getImportanceColor(importance) {
+            const colors = {
+                low: 'gray',
+                medium: 'yellow',
+                high: 'red'
+            };
+            return colors[importance] || 'gray';
+        }
+
+        function getDifficultyColor(difficulty) {
+            const colors = {
+                easy: 'green',
+                medium: 'yellow',
+                hard: 'red'
+            };
+            return colors[difficulty] || 'gray';
+        }
+
+        // Event listeners
+        function setupEventListeners() {
+            // Note form
+            document.getElementById('noteForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const noteData = {
+                    title: document.getElementById('noteTitle').value,
+                    content: document.getElementById('noteContent').value,
+                    subject: document.getElementById('noteSubject').value,
+                    importance: document.getElementById('noteImportance').value,
+                    tags: document.getElementById('noteTags').value.split(',').map(tag => tag.trim()).filter(tag => tag)
+                };
+                
+                fetch(`${BACKEND_URL}/api/notes`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(noteData)
+                })
+                .then(response => response.json())
+                .then(() => {
+                    closeNoteModal();
+                    loadNotes();
+                    loadDashboard();
+                })
+                .catch(error => console.error('Create note error:', error));
+            });
+            
+            // Flashcard form
+            document.getElementById('flashcardForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const cardData = {
+                    question: document.getElementById('cardQuestion').value,
+                    answer: document.getElementById('cardAnswer').value,
+                    subject: document.getElementById('cardSubject').value,
+                    difficulty: document.getElementById('cardDifficulty').value,
+                    deck: document.getElementById('cardDeck').value || 'General'
+                };
+                
+                fetch(`${BACKEND_URL}/api/flashcards`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(cardData)
+                })
+                .then(response => response.json())
+                .then(() => {
+                    closeFlashcardModal();
+                    loadFlashcards();
+                    loadDashboard();
+                })
+                .catch(error => console.error('Create flashcard error:', error));
+            });
+            
+            // Session form
+            document.getElementById('sessionForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const sessionData = {
+                    subject: document.getElementById('sessionSubjectSelect').value,
+                    focus: document.getElementById('sessionFocus').value,
+                    goals: document.getElementById('sessionGoals').value.split('\n').filter(goal => goal.trim())
+                };
+                
+                fetch(`${BACKEND_URL}/api/sessions/start`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(sessionData)
+                })
+                .then(response => response.json())
+                .then(session => {
+                    currentSession = session;
+                    closeSessionModal();
+                    startSessionTimer();
+                    document.getElementById('currentSession').classList.remove('hidden');
+                    document.getElementById('sessionSubject').textContent = session.subject;
+                    document.getElementById('sessionFocus').textContent = session.focus;
+                })
+                .catch(error => console.error('Start session error:', error));
+            });
+            
+            // Chat input
+            document.getElementById('chatInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+            // Search and filters
+            document.getElementById('noteSearch').addEventListener('input', function() {
+                // Implement search functionality
+            });
+            
+            document.getElementById('noteSubjectFilter').addEventListener('change', function() {
+                // Implement filter functionality
+            });
+            
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                localStorage.removeItem('authToken');
+                window.location.href = 'auth-ui.html';
+            });
+        }
+
+        function startSessionTimer() {
+            if (sessionTimer) clearInterval(sessionTimer);
+            
+            sessionTimer = setInterval(() => {
+                if (currentSession) {
+                    const elapsed = Date.now() - new Date(currentSession.startTime).getTime();
+                    document.getElementById('sessionDuration').textContent = formatDuration(Math.floor(elapsed / 1000));
+                }
+            }, 1000);
+        }
+
+        function pauseSession() {
+            // Implement pause functionality
+            alert('Pause functionality coming soon!');
+        }
+
+        function endSession() {
+            if (!currentSession) return;
+            
+            fetch(`${BACKEND_URL}/api/sessions/${currentSession._id}/end`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ productivity: 8 }) // Default productivity
+            })
+            .then(response => response.json())
+            .then(() => {
+                if (sessionTimer) clearInterval(sessionTimer);
+                currentSession = null;
+                document.getElementById('currentSession').classList.add('hidden');
+                loadSessions();
+                loadDashboard();
+            })
+            .catch(error => console.error('End session error:', error));
+        }
+    </script>
+</body>
+</html>

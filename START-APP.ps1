@@ -99,24 +99,13 @@ if (Test-Path $aiEnginePath) {
 }
 
 # Start Backend Server
-Write-Host "[3/4] 🔧 Starting Backend Server..." -ForegroundColor Cyan
-$backendPath = Join-Path $PSScriptRoot "backend"
-if (Test-Path $backendPath) {
-    Start-Process -FilePath "node" -ArgumentList "demoServer.js" -WorkingDirectory $backendPath -WindowStyle Minimized
-    Wait-ForService -Port 5001 -ServiceName "Backend Server" | Out-Null
-} else {
-    Write-Host "⚠️  Backend directory not found" -ForegroundColor Yellow
-}
+Write-Host "[3/4] 🚀 Starting Backend Server..." -ForegroundColor Cyan
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD/backend'; mvn spring-boot:run" -WindowStyle Normal
+Start-Sleep -Seconds 5  # Give backend time to start
 
-# Open Web Interface
+# Open the application
 Write-Host "[4/4] 🌐 Opening AI Student Companion..." -ForegroundColor Cyan
-$jsAppPath = Join-Path $PSScriptRoot "js-app.html"
-if (Test-Path $jsAppPath) {
-    Start-Process $jsAppPath
-    Write-Host "✅ JavaScript application opened!" -ForegroundColor Green
-} else {
-    Write-Host "⚠️  js-app.html not found, trying backend URL..." -ForegroundColor Yellow
-    Start-Process "http://localhost:5001"
+Start-Process "http://localhost:5001"
     Write-Host "✅ Opening web interface via backend server!" -ForegroundColor Green
 }
 

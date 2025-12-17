@@ -6,6 +6,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
+const crypto = require('crypto');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -72,8 +73,122 @@ const io = new Server(httpServer, {
 const OLLAMA_URL = 'http://localhost:11434';
 const MODEL = 'llama3.2:1b';
 
+// WhatsApp Business API configuration
+const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
+const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
+const WHATSAPP_WEBHOOK_VERIFY_TOKEN = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN;
+const WHATSAPP_API_VERSION = 'v18.0';
+const WHATSAPP_BASE_URL = `https://graph.facebook.com/${WHATSAPP_API_VERSION}`;
+
+// WhatsApp service functions
+class WhatsAppService {
+  static verifyWebhook(mode, token, challenge) {
+    if (mode === 'subscribe' && token === WHATSAPP_WEBHOOK_VERIFY_TOKEN) {
+      return challenge;
+    }
+    return null;
+  }
+
+  static async sendMessage(to, message, type = 'text') {
+    try {
+      const payload = {
+        messaging_product: 'whatsapp',
+        to: to.replace(/[\s\+\-\(\)]/g, ''),
+        type: type
+      };
+
+      if (type === 'text') {
+        payload.text = { body: message };
+      }
+
+      const response = await axios.post(
+        `${WHATSAPP_BASE_URL}/${WHATSAPP_PHONE_NUMBER_ID}/messages`,
+        payload,
+        {
+          headers: {
+            'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error('Error sending WhatsApp message:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  static async sendInteractiveMessage(to, interactiveContent) {
+    try {
+      const payload = {
+        messaging_product: 'whatsapp',
+        to: to.replace(/[\s\+\-\(\)]/g, ''),
+        type: 'interactive',
+        interactive: interactiveContent
+      };
+
+      const response = await axios.post(
+        `${WHATSAPP_BASE_URL}/${WHATSAPP_PHONE_NUMBER_ID}/messages`,
+        payload,
+        {
+          headers: {
+            'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error('Error sending interactive WhatsApp message:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  static createButtonMessage(bodyText, buttons) {
+    return {
+      type: 'button',
+      body: { text: bodyText },
+      action: {
+        buttons: buttons.map((button, index) => ({
+          type: 'reply',
+          reply: {
+            id: `btn_${index + 1}`,
+            title: button.title
+          }
+        }))
+      }
+    };
+  }
+
+  static async markAsRead(messageId) {
+    try {
+      const payload = {
+        messaging_product: 'whatsapp',
+        status: 'read',
+        message_id: messageId
+      };
+
+      await axios.post(
+        `${WHATSAPP_BASE_URL}/messages`,
+        payload,
+        {
+          headers: {
+            'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Error marking message as read:', error.response?.data || error.message);
+    }
+  }
+}
+
 // In-memory store for demo purposes
 const sessions = new Map();
+const whatsappSessions = new Map();
 
 // Serve uploaded files statically
 app.use('/uploads', express.static('uploads'));

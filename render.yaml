@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: ai-student-companion-whatsapp
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node whatsapp-server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3002
+      - key: WHATSAPP_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_WEBHOOK_VERIFY_TOKEN
+        sync: false

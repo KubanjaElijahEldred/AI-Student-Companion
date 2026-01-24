@@ -13,21 +13,21 @@ A powerful AI-powered student companion application built with Node.js and Java,
 - Clean, modern architecture
 - Cross-platform compatibility
 
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack,
 
 - **Backend**: Node.js, Express, WebSocket
 - **AI Integration**: Ollama
 - **Build Tools**: npm, Maven
 - **Version Control**: Git
 
-## 📦 Prerequisites,
+## 📦 Prerequisites
 
 - Node.js 16+
 - Java 11+
 - Ollama server running locally
 - npm or yarn
 
-## 🚀 Getting Started
+## 🚀 Getting Started,
 
 1. **Clone the repository**
    ```bash

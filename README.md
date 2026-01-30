@@ -13,7 +13,7 @@ A powerful AI-powered student companion application built with Node.js and Java,
 - Clean, modern architecture
 - Cross-platform compatibility
 
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack,
 
 - **Backend**: Node.js, Express, WebSocket
 - **AI Integration**: Ollama

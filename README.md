@@ -20,7 +20,7 @@ A powerful AI-powered student companion application built with Node.js and Java,
 - **Build Tools**: npm, Maven
 - **Version Control**: Git
 
-## 📦 Prerequisites,
+## 📦 Prerequisites
 
 - Node.js 16+
 - Java 11+

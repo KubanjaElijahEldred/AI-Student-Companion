@@ -82,7 +82,7 @@ MODEL=llama3.2:1b
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## 🙏 Acknowledgments.
 
 - [Ollama](https://ollama.ai/) for the powerful AI models
 - All contributors who have helped shape this project

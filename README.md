@@ -5,7 +5,7 @@
 
 A powerful AI-powered student companion application built with Node.js and Java, designed to enhance learning and productivity.
 
-## 🚀 Features
+## 🚀 Features,
 
 - Real-time chat with AI assistant
 - Seamless integration with Ollama's language models

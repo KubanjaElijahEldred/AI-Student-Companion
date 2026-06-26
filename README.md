@@ -5,7 +5,7 @@
 
 A powerful AI-powered student companion application built with Node.js and Java, designed to enhance learning and productivity.
 
-## 🚀 Features,
+## 🚀 Features
 
 - Real-time chat with AI assistant
 - Seamless integration with Ollama's language models
@@ -13,14 +13,14 @@ A powerful AI-powered student companion application built with Node.js and Java,
 - Clean, modern architecture
 - Cross-platform compatibility
 
-## 🛠️ Tech Stack,
+## 🛠️ Tech Stack
 
 - **Backend**: Node.js, Express, WebSocket
 - **AI Integration**: Ollama
 - **Build Tools**: npm, Maven
 - **Version Control**: Git
 
-## 📦 Prerequisites,
+## 📦 Prerequisites
 
 - Node.js 16+
 - Java 11+

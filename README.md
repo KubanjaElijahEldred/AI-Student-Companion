@@ -1,4 +1,4 @@
-# AI Student Companion,
+# AI Student Companion
 
 ![GitHub language count](https://img.shields.io/github/languages/count/yourusername/ai-student-companion)
 ![GitHub top language](https://img.shields.io/github/languages/top/yourusername/ai-student-companion),
@@ -15,7 +15,7 @@ A powerful AI-powered student companion application built with Node.js and Java,
 
 ## 🛠️ Tech Stack
 
-- **Backend**: Node.js, Express, WebSocket
+- **Backend**: Node.js, Express. WebSocket
 - **AI Integration**: Ollama
 - **Build Tools**: npm, Maven
 - **Version Control**: Git

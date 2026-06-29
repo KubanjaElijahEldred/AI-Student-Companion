@@ -50,13 +50,13 @@ A powerful AI-powered student companion application built with Node.js and Java,
    ```
 
 4. **Start the frontend** (in a new terminal)
-   ```bash
+   ```bash,..
    cd frontend
    npm install
    npm start
    ```
 
-5. **Access the application**
+5. **Access the application*,
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:3002
 

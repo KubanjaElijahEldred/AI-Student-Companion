@@ -15,7 +15,7 @@ A powerful AI-powered student companion application built with Node.js and Java,
 
 ## 🛠️ Tech Stack
 
-- **Backend**: Node.js, Express. WebSocket,
+- **Backend**: Node.js, Express. WebSocket
 - **AI Integration**: Ollama
 - **Build Tools**: npm, Maven
 - **Version Control**: Git

@@ -1,4 +1,5 @@
 # AI Student Companion.
+.
 
 ![GitHub language count](https://img.shields.io/github/languages/count/yourusername/ai-student-companion)
 ![GitHub top language](https://img.shields.io/github/languages/top/yourusername/ai-student-companion),

@@ -540,3 +540,4 @@ document.addEventListener('DOMContentLoaded', () => {
   const chat = new ChatManager();
   window.chatManager = chat; // Make it globally available if needed
 });
+// Message reactions (like, love, etc.)

@@ -594,3 +594,4 @@ document.addEventListener('DOMContentLoaded', () => {
 // Connection status UI improvements
 // Message search functionality
 // Keyboard shortcuts support
+// Message reactions support

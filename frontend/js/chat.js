@@ -541,3 +541,4 @@ document.addEventListener('DOMContentLoaded', () => {
   window.chatManager = chat; // Make it globally available if needed
 });
 // Theme toggle support - dark/light mode
+// Enhanced message timestamps with relative time

@@ -51,7 +51,7 @@ app.use(cors({
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 // Handle root URL
-app.get('/', (req, res) => {
+app.get(['/', '/index.html'], (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
 });
 
@@ -389,8 +389,13 @@ async function generateResponse(history) {
   }
 }
 
-// Start the server
+// Start the server (only when run directly, not when imported by Vercel)
 const PORT = process.env.PORT || 3002;
-httpServer.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+if (require.main === module) {
+  httpServer.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+// Export the Express app for Vercel serverless
+module.exports = app;

@@ -2,12 +2,16 @@ class ChatManager {
   constructor() {
     this.socket = null;
     this.isConnected = false;
+    this.wsAvailable = true; // WebSocket available flag
     this.pendingMessages = new Map();
     this.reconnectAttempts = 0;
-    this.maxReconnectAttempts = 5;
+    this.maxReconnectAttempts = 3; // Reduce attempts on Vercel (no WebSocket support)
     this.reconnectDelay = 1000; // Start with 1 second
     this.typingTimeout = null;
-    
+
+    // Dynamic API base URL based on current host (no hardcoded localhost)
+    this.apiBase = window.location.origin;
+
     this.initElements();
     this.initEventListeners();
     this.connectWebSocket();
@@ -239,15 +243,21 @@ class ChatManager {
       this.socket.onerror = (error) => {
         console.error('WebSocket error:', error);
         this.updateConnectionStatus(false);
+        // Don't call attemptReconnect here; onclose will handle it
       };
       
     } catch (error) {
       console.error('Error initializing WebSocket:', error);
+      this.wsAvailable = false;
       this.attemptReconnect();
     }
   }
 
   attemptReconnect() {
+    if (!this.wsAvailable) {
+      console.log('WebSocket not available on this host; using REST fallback');
+      return;
+    }
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000); // Exponential backoff, max 30s
@@ -258,7 +268,10 @@ class ChatManager {
         this.connectWebSocket();
       }, delay);
     } else {
-      console.error('Max reconnection attempts reached');
+      console.error('Max reconnection attempts reached; falling back to REST API');
+      this.wsAvailable = false;
+      this.isConnected = false;
+      this.updateConnectionStatus(false);
     }
   }
 
@@ -358,7 +371,7 @@ class ChatManager {
     formData.append('image', this.imageInput.files[0]);
     
     try {
-      const response = await fetch('http://localhost:3002/api/upload', {
+      const response = await fetch(`${this.apiBase}/api/upload`, {
         method: 'POST',
         body: formData
       });
@@ -388,6 +401,10 @@ class ChatManager {
   }
 
   sendTextMessage(message, messageId) {
+    // If WebSocket is not available, fall back to REST API
+    if (!this.wsAvailable || !this.isConnected) {
+      return this.sendViaFetch({ type: 'message', messageId, message });
+    }
     return this.sendSocketMessage({
       type: 'message',
       messageId,
@@ -414,6 +431,38 @@ class ChatManager {
       
       this.socket.send(JSON.stringify(data));
     });
+  }
+
+  // REST fallback: send message via HTTP POST when WebSocket is unavailable
+  sendViaFetch(data) {
+    return fetch(`${this.apiBase}/api/message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: data.message,
+        messageId: data.messageId,
+      }),
+    })
+      .then(res => res.json())
+      .then(result => {
+        if (result.type === 'response') {
+          const pending = this.pendingMessages.get(data.messageId);
+          if (pending) {
+            pending.resolve(result);
+            this.pendingMessages.delete(data.messageId);
+          }
+          this.addMessage('assistant', result.content, result.inResponseTo);
+        }
+        return result;
+      })
+      .catch(err => {
+        const pending = this.pendingMessages.get(data.messageId);
+        if (pending) {
+          pending.reject(err);
+          this.pendingMessages.delete(data.messageId);
+        }
+        throw err;
+      });
   }
 
   sendTypingIndicator(isTyping) {

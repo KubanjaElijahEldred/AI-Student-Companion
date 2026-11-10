@@ -592,3 +592,4 @@ document.addEventListener('DOMContentLoaded', () => {
 // Theme toggle support
 // Enhanced message timestamps
 // Connection status UI improvements
+// Message search functionality

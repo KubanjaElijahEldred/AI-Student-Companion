@@ -545,3 +545,4 @@ document.addEventListener('DOMContentLoaded', () => {
 // Connection status indicator with reconnect logic
 // Message search functionality
 // Keyboard shortcuts for chat navigation
+// Message reactions (like, love, etc.)

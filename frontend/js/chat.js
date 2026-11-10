@@ -593,3 +593,4 @@ document.addEventListener('DOMContentLoaded', () => {
 // Enhanced message timestamps
 // Connection status UI improvements
 // Message search functionality
+// Keyboard shortcuts support

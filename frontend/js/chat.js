@@ -590,3 +590,4 @@ document.addEventListener('DOMContentLoaded', () => {
   window.chatManager = chat; // Make it globally available if needed
 });
 // Theme toggle support
+// Enhanced message timestamps

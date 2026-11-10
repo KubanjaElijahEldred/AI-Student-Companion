@@ -589,3 +589,4 @@ document.addEventListener('DOMContentLoaded', () => {
   const chat = new ChatManager();
   window.chatManager = chat; // Make it globally available if needed
 });
+// Theme toggle support

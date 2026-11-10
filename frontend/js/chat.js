@@ -544,3 +544,4 @@ document.addEventListener('DOMContentLoaded', () => {
 // Enhanced message timestamps with relative time
 // Connection status indicator with reconnect logic
 // Message search functionality
+// Keyboard shortcuts for chat navigation

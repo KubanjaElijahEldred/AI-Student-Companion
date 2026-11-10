@@ -542,3 +542,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 // Theme toggle support - dark/light mode
 // Enhanced message timestamps with relative time
+// Connection status indicator with reconnect logic
